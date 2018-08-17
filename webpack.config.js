@@ -1,17 +1,15 @@
 /* eslint-disable import/no-extraneous-dependencies,global-require */
 
-const fs = require('fs')
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { DefinePlugin } = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const { safeLoad: yaml } = require('js-yaml')
+const config = require('./config.js')
 
 const nodeEnv = process.env.NODE_ENV || 'development'
 const devMode = nodeEnv.startsWith('dev')
 const appMountId = 'root'
 
-const config = yaml(fs.readFileSync('config.yaml', 'utf8'))
 const outputDir = path.resolve(path.join(__dirname, config.outputDir))
 
 const appBase = devMode ? '/' : config.appBase
