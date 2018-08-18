@@ -3,6 +3,7 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { DefinePlugin } = require('webpack')
+  const merge = require('webpack-merge')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const config = require('./config.js')
 
@@ -70,9 +71,6 @@ const rules = [
 ]
 
 const plugins = [
-  new MiniCssExtractPlugin({
-    filename: devMode ? '[name].css' : '[name].[hash].css',
-  }),
   new HtmlWebpackPlugin({
     template: 'src/client/html.ejs',
     inject: false,
@@ -110,19 +108,27 @@ if (devMode) {
   const webpackServeWaitpage = require('webpack-serve-waitpage')
   const history = require('connect-history-api-fallback')
   const convert = require('koa-connect')
-  clientConfig.serve = {
-    port: process.env.PORT || 8765,
-    host: process.env.HOST || 'localhost',
-    devMiddleware: {
-      stats,
+  module.exports = merge(clientConfig, {
+    serve: {
+      port: process.env.PORT || 8765,
+      host: process.env.HOST || 'localhost',
+      devMiddleware: {
+        stats,
+      },
+      add(app, middleware, options) {
+        app.use(convert(history({
+          /* https://github.com/bripkens/connect-history-api-fallback#options */
+        })))
+        app.use(webpackServeWaitpage(options))
+      },
     },
-    add(app, middleware, options) {
-      app.use(convert(history({
-        /* https://github.com/bripkens/connect-history-api-fallback#options */
-      })))
-      app.use(webpackServeWaitpage(options))
-    },
-  }
+  })
+} else {
+  module.exports = merge(clientConfig, {
+    plugins: [
+      new MiniCssExtractPlugin({
+        filename: '[name].[hash].css',
+      }),
+    ],
+  })
 }
-
-module.exports = [clientConfig]

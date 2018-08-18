@@ -1,4 +1,4 @@
 module.exports = {
-  outputDir: 'public',
-  appBase: '/',
+  outputDir: process.env.OUTDIR || 'public',
+  appBase: process.env.APPBASE || '/',
 }
