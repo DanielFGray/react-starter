@@ -45,20 +45,6 @@ const rules = [
   {
     test: /\.jsx?$/,
     exclude: /node_modules/,
-    enforce: 'pre',
-    use: [
-      {
-        loader: 'eslint-loader',
-        options: {
-          cache: true,
-          failOnError: false,
-        },
-      },
-    ],
-  },
-  {
-    test: /\.jsx?$/,
-    exclude: /node_modules/,
     use: [
       {
         loader: 'babel-loader',

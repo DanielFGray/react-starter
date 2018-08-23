@@ -2,13 +2,13 @@ module.exports = {
   presets: [
     ['@babel/preset-env', {
       targets: {
-        browsers: ['last 2 versions']
+        browsers: ['last 2 versions'],
       },
       loose: true,
       modules: false
     }],
     '@babel/preset-flow',
-    '@babel/preset-react'
+    '@babel/preset-react',
   ],
   plugins: [
     ['lodash', { id: ['lodash', 'ramda', 'recompose'] }],
@@ -18,6 +18,10 @@ module.exports = {
     // '@babel/plugin-syntax-dynamic-import',
     // '@babel/plugin-proposal-do-expressions',
     // ['@babel/plugin-proposal-decorators', { legacy: true }],
-  ]
+  ],
+  env: {
+    production: {
+      plugins: ['transform-react-remove-prop-types'],
+    },
+  },
 }
-
