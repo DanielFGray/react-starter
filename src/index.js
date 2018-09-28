@@ -6,7 +6,7 @@ import express from 'express'
 import morgan from 'morgan'
 import bodyParser from 'body-parser'
 import expressHelmet from 'helmet'
-import { Helmet } from 'react-helmet'
+import { HelmetProvider } from 'react-helmet-async'
 import { renderToString, renderToStaticMarkup } from 'react-dom/server'
 import Html from './Html'
 import Routes from './client/Routes'
@@ -42,20 +42,23 @@ app.get('/api*', (req, res) => {
 
 app.get('/', (req, res) => {
   getData().then(data => {
-    const context = { ...data, query: req.query || {} }
+    const routerCtx = {}
+    const helmetCtx = {}
     const children = (
-      <StaticRouter basename={appBase} location={req.url} context={context}>
-        <Layout>
-          <Routes data={data} />
-        </Layout>
+      <StaticRouter basename={appBase} location={req.url} context={routerCtx}>
+        <HelmetProvider context={helmetCtx}>
+          <Layout>
+            <Routes data={data} />
+          </Layout>
+        </HelmetProvider>
       </StaticRouter>
     )
     let html = renderToString(children)
-    const helmet = Helmet.rewind()
+    const { helmet } = helmetCtx
     html = renderToStaticMarkup(Html({ data, helmet, html }))
-    if (context.url) {
+    if (routerCtx.url) {
       res.writeHead(302, {
-        Location: context.url,
+        Location: routerCtx.url,
       })
       res.end()
     } else {
