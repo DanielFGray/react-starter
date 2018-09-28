@@ -1,17 +1,16 @@
 /* eslint-disable import/no-extraneous-dependencies,global-require */
 
-const fs = require('fs')
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { DefinePlugin } = require('webpack')
+  const merge = require('webpack-merge')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const { safeLoad: yaml } = require('js-yaml')
+const config = require('./config.js')
 
 const nodeEnv = process.env.NODE_ENV || 'development'
 const devMode = nodeEnv.startsWith('dev')
 const appMountId = 'root'
 
-const config = yaml(fs.readFileSync('config.yaml', 'utf8'))
 const outputDir = path.resolve(path.join(__dirname, config.outputDir))
 
 const appBase = devMode ? '/' : config.appBase
@@ -46,20 +45,6 @@ const rules = [
   {
     test: /\.jsx?$/,
     exclude: /node_modules/,
-    enforce: 'pre',
-    use: [
-      {
-        loader: 'eslint-loader',
-        options: {
-          cache: true,
-          failOnError: false,
-        },
-      },
-    ],
-  },
-  {
-    test: /\.jsx?$/,
-    exclude: /node_modules/,
     use: [
       {
         loader: 'babel-loader',
@@ -72,9 +57,6 @@ const rules = [
 ]
 
 const plugins = [
-  new MiniCssExtractPlugin({
-    filename: devMode ? '[name].css' : '[name].[hash].css',
-  }),
   new HtmlWebpackPlugin({
     template: 'src/client/html.ejs',
     inject: false,
@@ -112,19 +94,27 @@ if (devMode) {
   const webpackServeWaitpage = require('webpack-serve-waitpage')
   const history = require('connect-history-api-fallback')
   const convert = require('koa-connect')
-  clientConfig.serve = {
-    port: process.env.PORT || 8765,
-    host: process.env.HOST || 'localhost',
-    devMiddleware: {
-      stats,
+  module.exports = merge(clientConfig, {
+    serve: {
+      port: process.env.PORT || 8765,
+      host: process.env.HOST || 'localhost',
+      devMiddleware: {
+        stats,
+      },
+      add(app, middleware, options) {
+        app.use(convert(history({
+          /* https://github.com/bripkens/connect-history-api-fallback#options */
+        })))
+        app.use(webpackServeWaitpage(options))
+      },
     },
-    add(app, middleware, options) {
-      app.use(convert(history({
-        /* https://github.com/bripkens/connect-history-api-fallback#options */
-      })))
-      app.use(webpackServeWaitpage(options))
-    },
-  }
+  })
+} else {
+  module.exports = merge(clientConfig, {
+    plugins: [
+      new MiniCssExtractPlugin({
+        filename: '[name].[hash].css',
+      }),
+    ],
+  })
 }
-
-module.exports = [clientConfig]

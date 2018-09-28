@@ -2,19 +2,26 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router } from 'react-router-dom'
-import Routes from '../Routes'
+import Routes from './Routes'
 import './style.css'
 
-const Init = (
+const Init = props => (
   <Router basename={__APPBASE}>
-    <Routes />
+    <Routes {...props} />
   </Router>
 )
 
 const root = document.getElementById(__MOUNT)
+
 document.addEventListener('DOMContentLoaded', () => {
-  ReactDOM.render(Init, root)
+  // eslint-disable-next-line no-underscore-dangle
+  const props = typeof window.__INITIAL_DATA === 'object'
+    ? window.__INITIAL_DATA
+    : {}
+  ReactDOM.render(<Init {...props} />, root)
 })
+
 if (__DEV) {
-  require('webpack-serve-overlay') // eslint-disable-line global-require,import/no-extraneous-dependencies
+  /* eslint-disable global-require,import/no-extraneous-dependencies */
+  require('webpack-serve-overlay')
 }
