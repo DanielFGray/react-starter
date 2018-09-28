@@ -3,7 +3,7 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { DefinePlugin } = require('webpack')
-  const merge = require('webpack-merge')
+const merge = require('webpack-merge')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const config = require('./config.js')
 
@@ -19,6 +19,7 @@ const constants = {
   __MOUNT: JSON.stringify(appMountId),
   __APPBASE: JSON.stringify(appBase),
   __DEV: devMode,
+  __APPTITLE: JSON.stringify(config.appTitle),
 }
 
 const rules = [
@@ -60,7 +61,7 @@ const plugins = [
   new HtmlWebpackPlugin({
     template: 'src/client/html.ejs',
     inject: false,
-    title: '[insert title]',
+    title: config.appTitle,
     appMountId: 'root',
     mobile: true,
   }),

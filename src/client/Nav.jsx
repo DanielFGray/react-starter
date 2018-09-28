@@ -1,9 +1,13 @@
 import React from 'react'
+import { has } from 'ramda'
 import { NavLink } from 'react-router-dom'
+import routes from '../routes'
 
 // https://reacttraining.com/react-router/web/api/NavLink
 
-const Nav = ({ links }) => (
+const links = routes.filter(has('label'))
+
+const Nav = () => (
   <nav>
     <ul>
       {links.map(({ label, path }) => (

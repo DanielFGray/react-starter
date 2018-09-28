@@ -1,14 +1,14 @@
-const Main = require('./client/Main')
-const NotFound = require('./client/NotFound')
+import Main from './client/Main'
+import NotFound from './client/NotFound'
 
-module.exports = [
+export default [
   {
     label: 'Home',
     path: '/',
     exact: true,
-    component: Main.default,
+    component: Main,
   },
   {
-    component: NotFound.default,
+    component: NotFound,
   },
 ]
