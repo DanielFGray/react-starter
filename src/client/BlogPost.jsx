@@ -30,7 +30,7 @@ const BlogPost = ({
 
 const query = gql`
   query blogPostByName($id: String) {
-    Foo(id: $id) {
+    Post(id: $id) {
       title
       date
       category
