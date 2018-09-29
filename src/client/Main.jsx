@@ -14,7 +14,7 @@ const Main = ({ rootProps, ...props }) => (
         error,
         loading,
         reload,
-        data: { body: data }
+        data: { body: data },
       }) => {
         if (error !== null) console.error(error)
         return (
