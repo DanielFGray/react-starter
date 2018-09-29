@@ -126,4 +126,5 @@ if (! devMode) {
   )
 }
 
-module.exports = [clientConfig, serverConfig]
+// module.exports = [clientConfig, serverConfig]
+module.exports = [serverConfig]

@@ -2,16 +2,11 @@
 /* eslint-disable no-console */
 import Koa from 'koa'
 import Router from 'koa-router'
-import bodyParser from 'koa-body'
 import send from 'koa-send'
 import koaHelmet from 'koa-helmet'
-import { Helmet } from 'react-helmet'
-import * as React from 'react'
-import { StaticRouter } from 'react-router'
-import { renderToString, renderToStaticMarkup } from 'react-dom/server'
-import Html from './Html'
-import Routes from './client/Routes'
-import Layout from './client/Layout'
+import { ApolloServer, gql } from 'apollo-server-koa'
+import { makeExecutableSchema } from 'graphql-tools'
+import SSR from './SSR'
 
 const {
   appBase,
@@ -22,84 +17,76 @@ const {
 
 const app = new Koa()
 
-app.use(koaHelmet())
-app.use(bodyParser())
-
-const getData = () => Promise.resolve({ list: [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }] })
-
-app.use(async (ctx, next) => {
-  await next()
-  const rt = ctx.response.get('X-Response-Time')
-  console.log(`${ctx.method} ${ctx.url} ${ctx.status} - ${rt}`)
-})
-
-app.use(async (ctx, next) => {
-  const start = Date.now()
-  await next()
-  const ms = Date.now() - start
-  ctx.set('X-Response-Time', `${ms}ms`)
-})
-
-app.use(async (ctx, next) => {
-  try {
-    if (ctx.path !== '/') {
-      return await send(ctx, ctx.path, { root: publicDir })
-    }
-  } catch (e) {
-    /* fallthrough */
+const typeDefs = gql`
+  type Post {
+    title: String
+    body: String
+    date: String
+    tags: [String]
+    category: String
   }
-  return next()
+
+  type Query {
+    blogPostByName(id: String): Post
+    blogPostList: [Post]
+  }`
+
+const resolvers = {
+  Query: {
+    blogPostList: () => [],
+    blogPostByName: async (root, { name }) => ({
+      title: name,
+      date: new Date(),
+      category: 'test',
+      tags: ['foo', 'bar'],
+      content: 'hello world',
+    }),
+  },
+}
+
+const apolloServer = new ApolloServer({
+  typeDefs,
+  resolvers,
 })
 
-const api = new Router()
-  .get('/api/v1', async ctx => {
-    const body = await getData()
-    ctx.json = { status: 'ok', body }
+const schema = makeExecutableSchema({ typeDefs })
+apolloServer.applyMiddleware({ app })
+
+const router = new Router()
+  .get(['/', '/*'], SSR({ appBase, schema }))
+
+app
+  .use(koaHelmet())
+
+  .use(async (ctx, next) => {
+    await next()
+    const rt = ctx.response.get('X-Response-Time')
+    console.log(`${ctx.method} ${ctx.url} ${ctx.status} - ${rt}`)
   })
 
-  .all('/api*', async ctx => {
-    ctx.status = 500
-    ctx.set('Content-Type', 'application/json')
-    ctx.body = { status: 'error', body: 'not implemented' }
+  .use(async (ctx, next) => {
+    const start = Date.now()
+    await next()
+    const ms = Date.now() - start
+    ctx.set('X-Response-Time', `${ms}ms`)
   })
 
-const ssr = new Router()
-
-  .get('/robots.txt', async ctx => {
-    ctx.set('Content-Type', 'text/plain')
-    ctx.body = [
-      'User-agent: *',
-      'Disallow: /search/',
-    ].join('\n')
-  })
-
-  .get(['/', '/*'], async ctx => {
-    const data = await getData()
-    const context = { ...data, query: ctx.query || {} }
-    const children = (
-      <StaticRouter basename={appBase} location={ctx.url} context={context}>
-        <Layout>
-          <Routes data={data} />
-        </Layout>
-      </StaticRouter>
-    )
-    let html = renderToString(children)
-    const helmet = Helmet.rewind()
-    html = renderToStaticMarkup(Html({ data, helmet, html }))
-    if (context.url) {
-      ctx.redirect(context.url)
-    } else {
-      ctx.body = `<!doctype html>${html}`
+  .use(async (ctx, next) => {
+    try {
+      if (ctx.path !== '/') {
+        return await send(ctx, ctx.path, { root: publicDir })
+      }
+    } catch (e) {
+      /* fallthrough */
     }
+    return next()
   })
 
-app.use(api.routes())
-  .use(ssr.routes())
-  .use(api.allowedMethods())
-  .use(ssr.allowedMethods())
+  .use(router.routes())
+  .use(router.allowedMethods())
 
-app.listen(port, host, () => console.log(`
-  server now running on http://${host}:${port}`))
+  .listen(port, host, () => console.log(`
+    server now running on http://${host}:${port}`))
 
 process.on('uncaughtException', console.error)
 process.on('exit', () => console.log('exiting!'))
