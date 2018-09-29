@@ -7,7 +7,6 @@ module.exports = {
       loose: true,
       modules: false
     }],
-    '@babel/preset-flow',
     '@babel/preset-react',
   ],
   plugins: [
