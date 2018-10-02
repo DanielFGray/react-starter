@@ -19,7 +19,11 @@
   "dependencies": {
     "apollo-cache-inmemory": "^1.2.10",
     "apollo-client": "^2.4.2",
+    "apollo-link": "^1.2.3",
+    "apollo-link-error": "^1.1.1",
+    "apollo-link-http": "^1.5.5",
     "apollo-link-schema": "^1.1.1",
+    "apollo-link-state": "^0.4.2",
     "apollo-server": "^2.1.0",
     "apollo-server-koa": "^2.1.0",
     "graphql": "0.13.2",
@@ -50,6 +54,7 @@
     "@babel/register": "^7.0.0",
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.4",
+    "babel-plugin-graphql-tag": "^1.6.0",
     "babel-plugin-lodash": "^3.3.4",
     "clean-webpack-plugin": "^0.1.19",
     "css-loader": "^1.0.0",
@@ -71,6 +76,7 @@
     "stylelint-config-standard": "^18.2.0",
     "webpack": "^4.20.2",
     "webpack-assets-manifest": "^3.1.0",
+    "webpack-bundle-analyzer": "^3.0.2",
     "webpack-cli": "^3.1.1",
     "webpack-node-externals": "^1.7.2"
   }

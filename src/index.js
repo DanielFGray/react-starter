@@ -18,38 +18,30 @@ const {
 const app = new Koa()
 
 const typeDefs = gql`
-  type Post {
-    title: String
-    body: String
-    date: String
-    tags: [String]
-    category: String
+  type Item {
+    id: Int
+    content: String
+    seed: Int
   }
 
   type Query {
-    blogPostByName(id: String): Post
-    blogPostList: [Post]
+    getList: [Item]
   }`
 
 const resolvers = {
   Query: {
-    blogPostList: () => [],
-    blogPostByName: async (root, { name }) => ({
-      title: name,
-      date: new Date(),
-      category: 'test',
-      tags: ['foo', 'bar'],
+    // foo: async (root, { variables }) => {},
+    getList: () => [{
+      id: 1,
       content: 'hello world',
-    }),
+      seed: Math.random(),
+    }],
   },
 }
 
-const apolloServer = new ApolloServer({
-  typeDefs,
-  resolvers,
-})
+const schema = makeExecutableSchema({ typeDefs, resolvers })
+const apolloServer = new ApolloServer({ schema })
 
-const schema = makeExecutableSchema({ typeDefs })
 apolloServer.applyMiddleware({ app })
 
 const router = new Router()

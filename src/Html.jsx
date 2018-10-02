@@ -6,64 +6,68 @@ import { partition } from './utils'
 
 const manifest = __non_webpack_require__('./manifest.json')
 
-// const [styles, scripts] = partition([
-const [styles] = partition([
+const [styles, scripts] = partition([
   endsWith('.css'),
-  // endsWith('.js'),
+  endsWith('.js'),
 ], Object.values(manifest))
 
 const Html = ({
   data,
   html,
   helmet,
+  css,
 }) => {
-  console.log(data)
+  console.log({ initData: data })
   return (
-    <html lang="en">
+    <html lang="en" {...helmet.htmlAttributes.toString()}>
       <head>
-        <meta charSet="utf-8" />
-        <meta
-          httpEquiv="x-ua-compatible"
-          content="ie=edge,chrome=1"
-        />
         {helmet.title.toComponent()}
+        <meta charSet="utf-8" />
+        <meta httpEquiv="Content-Language" content="en" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {helmet.meta.toComponent()}
+        {helmet.style.toComponent()}
+        {helmet.link.toComponent()}
+        {css && <link rel="stylesheet" href={css} />}
+        {helmet.script.toComponent()}
+        {helmet.noscript.toComponent()}
+        <meta charSet="utf-8" />
         <meta
           name="viewport"
           content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
         />
         {helmet.link.toComponent()}
-        {styles.map(css => (
+        {styles && styles.map(link => (
           <link
-            key={css}
+            key={link}
             rel="stylesheet"
             type="text/css"
-            href={`${__APPBASE}/${css}`}
+            href={`${__APPBASE}/${link}`}
           />
         ))}
       </head>
-      <body>
+      <body {...helmet.bodyAttributes.toComponent()}>
         <div
           id={__MOUNT}
           dangerouslySetInnerHTML={{
             __html: html,
           }}
         />
-        {/*
-        <script
-          type="text/javascript"
-          dangerouslySetInnerHTML={{
-            __html: `window.__INIT_DATA = ${JSON.stringify(data)}`,
-          }}
-        />
-        {scripts.map(js => (
+        {data && (
+          <script
+            type="text/javascript"
+            dangerouslySetInnerHTML={{
+              __html: `window.__INIT_DATA = ${JSON.stringify(data)}`,
+            }}
+          />
+        )}
+        {scripts && scripts.map(js => (
           <script
             key={js}
             type="text/javascript"
             src={`${__APPBASE}/${js}`}
           />
         ))}
-        */}
       </body>
     </html>
   )

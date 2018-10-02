@@ -20,7 +20,7 @@ const {
 
 const constants = {
   __MOUNT: JSON.stringify(appMountId),
-  __APPBASE: JSON.stringify( appBase),
+  __APPBASE: JSON.stringify(appBase),
   __DEV: devMode,
   __BROWSER: true,
   __APPTITLE: JSON.stringify(appTitle),
@@ -57,7 +57,7 @@ const babelLoader = [
         },
       },
     ],
-  }
+  },
 ]
 
 const stats = {
@@ -71,7 +71,7 @@ const clientConfig = {
   mode: nodeEnv,
   entry: { main: './src/client/index' },
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['.mjs', '.js', '.jsx'],
   },
   output: {
     path: publicDir,
@@ -79,7 +79,7 @@ const clientConfig = {
     chunkFilename: '[id]-[chunkhash].js',
   },
   module: {
-    rules: [ ...babelLoader, ...cssLoaders ],
+    rules: [...babelLoader, ...cssLoaders],
   },
   plugins: [
     new MiniCssExtractPlugin(),
@@ -104,7 +104,7 @@ const serverConfig = {
     nodeExternals(),
   ],
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['.mjs', '.js', '.jsx'],
   },
   output: {
     filename: '[name].js',
@@ -126,5 +126,4 @@ if (! devMode) {
   )
 }
 
-// module.exports = [clientConfig, serverConfig]
-module.exports = [serverConfig]
+module.exports = [clientConfig, serverConfig]

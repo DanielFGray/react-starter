@@ -1,8 +1,8 @@
 import * as React from 'react'
 
-const Stringify = data => (
+const Stringify = props => (
   <pre>
-    {JSON.stringify(data, null, 2)}
+    {JSON.stringify(props, null, 2)}
   </pre>
 )
 export default Stringify
