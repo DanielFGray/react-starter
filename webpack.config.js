@@ -57,7 +57,7 @@ const babelLoader = [
         },
       },
     ],
-  }
+  },
 ]
 
 const stats = {
@@ -79,7 +79,7 @@ const clientConfig = {
     chunkFilename: '[id]-[chunkhash].js',
   },
   module: {
-    rules: [ ...babelLoader, ...cssLoaders ],
+    rules: [...babelLoader, ...cssLoaders],
   },
   plugins: [
     new MiniCssExtractPlugin(),
@@ -122,7 +122,7 @@ const serverConfig = {
 if (! devMode) {
   clientConfig.plugins.push(
     // new BabelMinifyWebpackPlugin(),
-    new CleanWebpackPlugin(['dist', 'public']),
+    new CleanWebpackPlugin(['public']),
   )
 }
 
