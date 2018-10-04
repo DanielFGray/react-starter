@@ -1,15 +1,10 @@
 import send from 'koa-send'
-import { format } from './utils'
 
-export const logger = str => async (ctx, next) => {
+export const logger = () => async (ctx, next) => {
   const start = Date.now()
   await next()
   const time = `${Date.now() - start}ms`
-  console.log(format(str, { ...ctx, time }))
-}
-
-export const responseTime = async (ctx, next) => {
-  await next()
+  console.log(`${ctx.method} ${ctx.url} ${ctx.status} - ${time}`)
 }
 
 export const staticFiles = opts => async (ctx, next) => {

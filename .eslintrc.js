@@ -8,6 +8,7 @@ module.exports = {
   },
   rules: {
     semi: ['error', 'never'],
+    indent: ['error', 2, { flatTernaryExpressions: true  }],
     'no-unexpected-multiline': 'error',
     'no-nested-ternary': 'off',
     'arrow-parens': ['error', 'as-needed'],
