@@ -1,4 +1,3 @@
-/* global __non_webpack_require__:false */
 /* eslint-disable no-console */
 import express from 'express'
 import morgan from 'morgan'

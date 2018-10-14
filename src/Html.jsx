@@ -11,7 +11,7 @@ const [styles, scripts] = partition([
   endsWith('.js'),
 ], Object.values(manifest))
 
-const appBase = __APPBASE === '/' ? '' : __APPBASE
+const appBase = __appBase === '/' ? '' : __appBase
 
 const Html = ({
   data,
@@ -43,7 +43,7 @@ const Html = ({
     </head>
     <body>
       <div
-        id={__MOUNT}
+        id={__mount}
         dangerouslySetInnerHTML={{
           __html: html,
         }}
