@@ -1,4 +1,3 @@
-/* global __APPBASE:false, __MOUNT:false */
 import * as React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router } from 'react-router-dom'
@@ -8,7 +7,7 @@ import Layout from './Layout'
 import './style.css'
 
 const Init = props => (
-  <Router basename={__APPBASE}>
+  <Router basename={__appBase}>
     <HelmetProvider>
       <Layout>
         <Routes {...props} />
@@ -17,7 +16,11 @@ const Init = props => (
   </Router>
 )
 
-document.addEventListener('DOMContentLoaded', () => {
-  const initData = window.__INIT_DATA // eslint-disable-line no-underscore-dangle
-  ReactDOM.hydrate(<Init initData={initData} />, document.getElementById(__MOUNT))
-})
+if (document) {
+  document.addEventListener('DOMContentLoaded', () => {
+    // eslint-disable-next-line no-underscore-dangle
+    ReactDOM.hydrate(<Init initData={window.__INIT_DATA} />, document.getElementById(__mount))
+  })
+}
+
+export default Init

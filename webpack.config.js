@@ -7,24 +7,11 @@ const WebpackAssetsManifest = require('webpack-assets-manifest')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const nodeExternals = require('webpack-node-externals')
+const config = require('./config.js')
 
-const {
-  appBase,
-  appMountId,
-  appTitle,
-  devMode,
-  nodeEnv,
-  outputDir,
-  publicDir,
-} = require('./config')
-
-const constants = {
-  __MOUNT: JSON.stringify(appMountId),
-  __APPBASE: JSON.stringify( appBase),
-  __DEV: devMode,
-  __BROWSER: true,
-  __APPTITLE: JSON.stringify(appTitle),
-}
+const constants = Object.entries(config)
+  .map(([k, v]) => [`__${k}`, JSON.stringify(v)])
+  .reduce((p, [k, v]) => Object.assign(p, { [k]: v }), {})
 
 const cssLoaders = [
   {
@@ -57,7 +44,7 @@ const babelLoader = [
         },
       },
     ],
-  }
+  },
 ]
 
 const stats = {
@@ -68,25 +55,25 @@ const stats = {
 
 const clientConfig = {
   name: 'client',
-  mode: nodeEnv,
+  mode: config.nodeEnv,
   entry: { main: './src/client/index' },
   resolve: {
     extensions: ['.js', '.jsx'],
   },
   output: {
-    path: publicDir,
-    filename: devMode ? '[name].js' : '[name]-[hash].js',
+    path: config.publicDir,
+    filename: config.devMode ? '[name].js' : '[name]-[hash].js',
     chunkFilename: '[id]-[chunkhash].js',
   },
   module: {
-    rules: [ ...babelLoader, ...cssLoaders ],
+    rules: [...babelLoader, ...cssLoaders],
   },
   plugins: [
     new MiniCssExtractPlugin(),
     new DefinePlugin(constants),
     new WebpackAssetsManifest({
       // https://github.com/webdeveric/webpack-assets-manifest/#readme
-      output: path.join(outputDir, './manifest.json'),
+      output: path.join(config.outputDir, './manifest.json'),
       writeToDisk: true,
     }),
   ],
@@ -95,7 +82,7 @@ const clientConfig = {
 
 const serverConfig = {
   name: 'server',
-  mode: nodeEnv,
+  mode: config.nodeEnv,
   entry: { index: './src/index' },
   target: 'node',
   externals: [
@@ -107,8 +94,8 @@ const serverConfig = {
     extensions: ['.js', '.jsx'],
   },
   output: {
-    filename: '[name].js',
-    path: outputDir,
+    path: config.outputDir,
+    filename: '[name].js'
   },
   module: {
     rules: babelLoader,
@@ -119,7 +106,7 @@ const serverConfig = {
   stats,
 }
 
-if (! devMode) {
+if (! config.devMode) {
   clientConfig.plugins.push(
     // new BabelMinifyWebpackPlugin(),
     new CleanWebpackPlugin(['dist', 'public']),
