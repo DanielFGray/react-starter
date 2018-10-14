@@ -1,3 +1,12 @@
+:root {
+  --hue: 220;
+  --hue: 220;
+  --primary-color: hsl(var(--hue), 50%, 50%);
+  --color-bg: #131313;
+  --color-bg-alt: #333;
+  --color-text: #eee;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -12,8 +21,8 @@ body {
   line-height: 1.618;
   max-width: 38em;
   margin: auto;
-  color: #4a4a4a;
-  background-color: #f9f9f9;
+  color: var(--color-text);
+  background-color: var(--color-bg);
   padding: 13px;
 }
 
@@ -29,7 +38,12 @@ body {
   }
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   line-height: 1.1;
   font-weight: 700;
   overflow-wrap: break-word;
@@ -38,26 +52,44 @@ h1, h2, h3, h4, h5, h6 {
   hyphens: auto;
 }
 
-h1 {
-  font-size: 2.35em;
+h1 { font-size: 2.35em; }
+h2 { font-size: 2em; }
+h3 { font-size: 1.75em; }
+h4 { font-size: 1.5em; }
+h5 { font-size: 1.25em; }
+h6 { font-size: 1em; }
+
+pre {
+  display: block;
+  padding: 1em;
+  overflow-x: auto;
 }
 
-h2 {
-  font-size: 2em;
+code {
+  white-space: pre-wrap;
 }
 
-h3 {
-  font-size: 1.75em;
+pre > code {
+  padding: 0;
+  background-color: transparent;
+  white-space: pre;
 }
 
-h4 {
-  font-size: 1.5em;
-}
+textarea,
+select,
+button,
+input[type] {
+  color: var(--text-color);
+  padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
+  margin-bottom: 10px;
+  background-color: var(--color-bg-alt);
+  border: 1px solid var(--color-bg-alt);
+  border-radius: 4px;
+  box-shadow: none;
+  box-sizing: border-box;
 
-h5 {
-  font-size: 1.25em;
-}
-
-h6 {
-  font-size: 1em;
+  &:focus {
+    border: 1px solid var(--text-color);
+    outline: 0;
+  }
 }

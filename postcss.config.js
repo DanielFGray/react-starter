@@ -4,11 +4,15 @@ module.exports = {
       stage: 1,
       browsers: 'last 2 versions',
     }),
-    // require('postcss-nesting')(),
+    require('postcss-fixes')({ preset: 'recommended' }),
   ],
   env: {
     production: {
-      cssnano: { autoprefixer: false },
+      cssnano: {
+        autoprefixer: false,
+        safe: true,
+        calc: false,
+      },
     },
   },
 }

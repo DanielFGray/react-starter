@@ -1,34 +1,20 @@
 /* eslint-disable import/no-extraneous-dependencies,global-require */
 
-const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { DefinePlugin } = require('webpack')
 const merge = require('webpack-merge')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const config = require('./config.js')
 
-const nodeEnv = process.env.NODE_ENV || 'development'
-const devMode = nodeEnv.startsWith('dev')
-const appMountId = 'root'
-
-const outputDir = path.resolve(path.join(__dirname, config.outputDir))
-
-const appBase = devMode ? '/' : config.appBase
-
-const constants = {
-  __MOUNT: JSON.stringify(appMountId),
-  __APPBASE: JSON.stringify(appBase),
-  __DEV: devMode,
-  __APPTITLE: JSON.stringify(config.appTitle),
-}
+const constants = Object.entries(config)
+  .map(([k, v]) => [`__${k}`, JSON.stringify(v)])
+  .reduce((p, [k, v]) => Object.assign(p, { [k]: v }), {})
 
 const rules = [
   {
     test: /node_modules[\\/].*\.css$/,
     use: [
-      devMode
-        ? 'style-loader'
-        : MiniCssExtractPlugin.loader,
+      MiniCssExtractPlugin.loader,
       'css-loader',
     ],
   },
@@ -36,9 +22,7 @@ const rules = [
     exclude: /node_modules/,
     test: /\.(s|c)ss$/,
     use: [
-      devMode
-        ? 'style-loader'
-        : MiniCssExtractPlugin.loader,
+      MiniCssExtractPlugin.loader,
       'css-loader',
       'postcss-loader',
     ],
@@ -62,10 +46,11 @@ const plugins = [
     template: 'src/client/html.ejs',
     inject: false,
     title: config.appTitle,
-    appMountId: 'root',
+    appMountId: config.mount,
     mobile: true,
   }),
   new DefinePlugin(constants),
+  new MiniCssExtractPlugin()
 ]
 
 const stats = {
@@ -75,14 +60,15 @@ const stats = {
 }
 
 const clientConfig = {
-  mode: process.env.NODE_ENV || 'development',
+  name: 'client',
+  mode: config.nodeEnv,
   entry: { main: './src/client/index' },
   resolve: {
     extensions: ['.js', '.jsx'],
   },
   output: {
-    filename: '[name].[hash].js',
-    path: outputDir,
+    path: config.publicDir,
+    filename: config.devMode ? '[name].js' : '[name]-[hash].js',
   },
   module: {
     rules,
@@ -91,14 +77,14 @@ const clientConfig = {
   stats,
 }
 
-if (devMode) {
+if (config.devMode) {
   const webpackServeWaitpage = require('webpack-serve-waitpage')
   const history = require('connect-history-api-fallback')
   const convert = require('koa-connect')
   module.exports = merge(clientConfig, {
     serve: {
-      port: process.env.PORT || 8765,
-      host: process.env.HOST || 'localhost',
+      port: config.port,
+      host: config.host,
       devMiddleware: {
         stats,
       },

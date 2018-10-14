@@ -1,4 +1,3 @@
-/* global __APPBASE:false, __DEV:false, __MOUNT:false */
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router } from 'react-router-dom'
@@ -8,7 +7,7 @@ import Layout from './Layout'
 import './style.css'
 
 const Init = props => (
-  <Router basename={__APPBASE}>
+  <Router basename={__appBase}>
     <HelmetProvider>
       <Layout>
         <Routes {...props} />
@@ -19,12 +18,9 @@ const Init = props => (
 
 document.addEventListener('DOMContentLoaded', () => {
   const initData = window.__INIT_DATA // eslint-disable-line no-underscore-dangle
-  const props = typeof initData === 'object' ? initData : {}
-  const root = document.getElementById(__MOUNT)
-  ReactDOM.hydrate(<Init initData={props} />, root)
+  ReactDOM.hydrate(<Init initData={initData} />, document.getElementById(__mount))
 })
 
-if (__DEV) {
-  /* eslint-disable global-require,import/no-extraneous-dependencies */
-  require('webpack-serve-overlay')
+if (__devMode) {
+  require('webpack-serve-overlay') /* eslint-disable-line global-require,import/no-extraneous-dependencies */
 }

@@ -43,6 +43,7 @@
     "mini-css-extract-plugin": "^0.4.2",
     "nodemon": "^1.18.3",
     "postcss": "^7.0.1",
+    "postcss-fixes": "^2.0.1",
     "postcss-loader": "^3.0.0",
     "postcss-nesting": "^6.0.0",
     "postcss-preset-env": "^5.2.3",
