@@ -7,24 +7,11 @@ const WebpackAssetsManifest = require('webpack-assets-manifest')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const nodeExternals = require('webpack-node-externals')
+const config = require('./config.js')
 
-const {
-  appBase,
-  appMountId,
-  appTitle,
-  devMode,
-  nodeEnv,
-  outputDir,
-  publicDir,
-} = require('./config')
-
-const constants = {
-  __MOUNT: JSON.stringify(appMountId),
-  __APPBASE: JSON.stringify(appBase),
-  __DEV: devMode,
-  __BROWSER: true,
-  __APPTITLE: JSON.stringify(appTitle),
-}
+const constants = Object.entries(config)
+  .map(([k, v]) => [`__${k}`, JSON.stringify(v)])
+  .reduce((p, [k, v]) => Object.assign(p, { [k]: v }), {})
 
 const cssLoaders = [
   {
@@ -68,25 +55,28 @@ const stats = {
 
 const clientConfig = {
   name: 'client',
-  mode: nodeEnv,
+  mode: config.nodeEnv,
   entry: { main: './src/client/index' },
   resolve: {
-    extensions: ['.mjs', '.js', '.jsx'],
+    extensions: ['.js', '.jsx'],
   },
   output: {
-    path: publicDir,
-    filename: devMode ? '[name].js' : '[name]-[hash].js',
-    chunkFilename: '[id]-[chunkhash].js',
+    path: config.publicDir,
+    filename: config.devMode ? '[name].js' : '[name]-[hash].js',
+    chunkFilename: config.devMode ? '[name].js' : '[id]-[chunkhash].js',
   },
   module: {
     rules: [...babelLoader, ...cssLoaders],
   },
   plugins: [
-    new MiniCssExtractPlugin(),
-    new DefinePlugin(constants),
+    new MiniCssExtractPlugin({
+      filename: config.devMode ? '[name].css' : '[name]-[hash].css',
+      chunkFilename: config.devMode ? '[name].css' : '[id]-[chunkhash].css',
+    }),
+    new DefinePlugin({ ...constants, __browser: true }),
     new WebpackAssetsManifest({
       // https://github.com/webdeveric/webpack-assets-manifest/#readme
-      output: path.join(outputDir, './manifest.json'),
+      output: path.join(config.outputDir, './manifest.json'),
       writeToDisk: true,
     }),
   ],
@@ -95,7 +85,7 @@ const clientConfig = {
 
 const serverConfig = {
   name: 'server',
-  mode: nodeEnv,
+  mode: config.nodeEnv,
   entry: { index: './src/index' },
   target: 'node',
   externals: [
@@ -104,11 +94,11 @@ const serverConfig = {
     nodeExternals(),
   ],
   resolve: {
-    extensions: ['.mjs', '.js', '.jsx'],
+    extensions: ['.js', '.jsx'],
   },
   output: {
     filename: '[name].js',
-    path: outputDir,
+    path: config.outputDir,
   },
   module: {
     rules: babelLoader,
@@ -117,13 +107,6 @@ const serverConfig = {
     new DefinePlugin({ ...constants, __BROWSER: false }),
   ],
   stats,
-}
-
-if (! devMode) {
-  clientConfig.plugins.push(
-    // new BabelMinifyWebpackPlugin(),
-    new CleanWebpackPlugin(['dist', 'public']),
-  )
 }
 
 module.exports = [clientConfig, serverConfig]

@@ -1,11 +1,11 @@
 import * as React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { StaticRouter } from 'react-router'
+import { HelmetProvider } from 'react-helmet-async'
 import { ApolloProvider, renderToStringWithData } from 'react-apollo'
 import { ApolloClient } from 'apollo-client'
 import { SchemaLink } from 'apollo-link-schema'
 import { InMemoryCache } from 'apollo-cache-inmemory'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { StaticRouter } from 'react-router'
-import { HelmetProvider } from 'react-helmet-async'
 import Html from './Html'
 import Routes from './client/Routes'
 import Layout from './client/Layout'
@@ -41,7 +41,6 @@ export default ({ appBase, schema }) => {
       const { helmet } = helmetCtx
       const data = client.extract()
       const body = renderToStaticMarkup(Html({ data, helmet, html }))
-      console.log({ routerCtx })
       if (routerCtx.status) {
         ctx.status = routerCtx.status
       }

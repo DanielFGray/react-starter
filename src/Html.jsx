@@ -1,4 +1,3 @@
-/* global __non_webpack_require__:false __APPBASE:false __MOUNT:false */
 /* eslint react/no-danger: off */
 import * as React from 'react'
 import { endsWith } from 'ramda'
@@ -37,13 +36,13 @@ const Html = ({
           key={link}
           rel="stylesheet"
           type="text/css"
-          href={`${__APPBASE}/${link}`}
+          href={`${__appBase}/${link}`}
         />
       ))}
     </head>
     <body {...helmet.bodyAttributes.toComponent()}>
       <div
-        id={__MOUNT}
+        id={__mount}
         dangerouslySetInnerHTML={{
           __html: html,
         }}
@@ -61,7 +60,7 @@ const Html = ({
         <script
           key={js}
           type="text/javascript"
-          src={`${__APPBASE}/${js}`}
+          src={`${__appBase}/${js}`}
         />
       ))}
     </body>
