@@ -77,31 +77,22 @@ const clientConfig = {
   stats,
 }
 
-if (config.devMode) {
-  const webpackServeWaitpage = require('webpack-serve-waitpage')
-  const history = require('connect-history-api-fallback')
-  const convert = require('koa-connect')
-  module.exports = merge(clientConfig, {
-    serve: {
-      port: config.port,
-      host: config.host,
-      devMiddleware: {
+module.exports = merge(
+  clientConfig,
+  config.devMode
+    ? {
+      devServer: {
+        host: config.host,
+        port: config.port,
+        contentBase: config.publicDir,
         stats,
       },
-      add(app, middleware, options) {
-        app.use(convert(history({
-          /* https://github.com/bripkens/connect-history-api-fallback#options */
-        })))
-        app.use(webpackServeWaitpage(options))
-      },
+    }
+    : {
+      plugins: [
+        new MiniCssExtractPlugin({
+          filename: '[name].[hash].css',
+        }),
+      ],
     },
-  })
-} else {
-  module.exports = merge(clientConfig, {
-    plugins: [
-      new MiniCssExtractPlugin({
-        filename: '[name].[hash].css',
-      }),
-    ],
-  })
-}
+)

@@ -20,7 +20,3 @@ document.addEventListener('DOMContentLoaded', () => {
   const initData = window.__INIT_DATA // eslint-disable-line no-underscore-dangle
   ReactDOM.hydrate(<Init initData={initData} />, document.getElementById(__mount))
 })
-
-if (__devMode) {
-  require('webpack-serve-overlay') /* eslint-disable-line global-require,import/no-extraneous-dependencies */
-}
