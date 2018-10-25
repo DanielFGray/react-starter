@@ -6,7 +6,9 @@
   "scripts": {
     "start": "nodemon -w \"./{webpack.config.js,.babelrc}\" -x webpack-serve",
     "build": "rm -fr public; NODE_ENV=production webpack -p",
-    "test": "concurrently --names=css,js -r 'stylelint \"./src/**/*.sss\"' 'eslint --cache src --ext=.js,.jsx'"
+    "lint:css": "stylelint './src/**/*.css'",
+    "lint:js": "eslint --cache --ext=.js,.jsx --ignore-path=.gitignore .",
+    "lint": "npm-run-all -p lint:css lint:js"
   },
   "keywords": [],
   "author": "",
