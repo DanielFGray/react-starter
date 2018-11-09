@@ -33,7 +33,6 @@ const gqlMessagePatch = gql`
 const gqlMessageDel = gql`
   mutation ($id: Int!) {
     MessageDel(id: $id) {
-      message
       id
     }
   }
@@ -45,57 +44,67 @@ class Item extends React.Component {
     editing: false,
   }
 
-  textChange = e => {
-    this.setState({ editText: e.target.value })
+  inputChange = k => e => {
+    this.setState({ [k]: e.target.value })
   }
 
-  toggleEdit = () => {
-    this.setState(s => ({ editing: ! s.editing }))
+  toggleState = k => () => {
+    this.setState(s => ({ [k]: ! s[k] }))
   }
 
-  handleSubmit = f => e => {
+  handleSubmit = e => {
     e.preventDefault()
-    f()
+    this.setState({ editing: false })
+    this.props.msgPatch({ variables: { id: this.props.id, message: this.state.editText } })
+  }
+
+  del = _ => {
+    this.props.msgDel({ variables: { id: this.props.id } })
   }
 
   render() {
     const { id, message } = this.props
     const { editText, editing } = this.state
     return (
-      <Mutation
-        mutation={gqlMessagePatch}
-        variables={{ id, message: editText }}
-      >
-        {(patch, { errors }) => {
-          if (errors) errors.forEach(e => console.error(e))
-          return (
-            <form onSubmit={this.handleSubmit(patch)}>
-              <div key={id}>
-                {editing
-                  ? <input type="text" value={editText} onChange={this.textChange} />
-                  : message}
-                {' '}
-                <Mutation
-                  mutation={gqlMessageDel}
-                  variables={{ id }}
-                >
-                  {(del, { errors }) => { // eslint-disable-line no-shadow
-                    if (errors) errors.forEach(e => console.error(e))
-                    return (
-                      <button onClick={del}>Delete</button>
-                    )
-                  }}
-                </Mutation>
-                {' '}
-                <button onClick={this.toggleEdit}>Edit</button>
-              </div>
-            </form>
+      <form onSubmit={this.handleSubmit}>
+        <span>{id}</span>
+        {' - '}
+        {editing
+          ? (
+            <>
+              <input type="text" value={editText} onChange={this.inputChange('editText')} />
+              <input type="submit" value="edit" onClick={this.handleSubmit} />
+              <button onClick={this.del}>Delete</button>
+            </>
+          ) : (
+            <>
+              <label onClick={this.toggleState('editing')}>{message}</label>
+              <button onClick={this.toggleState('editing')}>edit</button>
+            </>
           )
-        }}
-      </Mutation>
+        }
+      </form>
     )
   }
 }
+
+const List = ({ msgAdd, newItem, textChange, refetch, data, ...props }) => (
+  <div>
+    <form onSubmit={msgAdd}>
+      <input type="text" placeholder="enter a message" value={newItem} onChange={textChange} />
+      <button type="button" onClick={e => refetch()}>
+        Reload
+      </button>
+    </form>
+    <ul>
+      {data.MessageList && data.MessageList.map(({ id, ...x }) => (
+        <li key={id}>
+          <Item {...props} {...x} id={id} />
+        </li>
+      ))}
+    </ul>
+  </div>
+)
 
 // https://www.apollographql.com/docs/react/essentials/mutations.html#update
 
@@ -104,54 +113,59 @@ class Main extends React.Component {
     newItem: '',
   }
 
-  textChange = e => {
-    this.setState({ newItem: e.target.value })
+  inputChange = k => e => {
+    this.setState({ [k]: e.target.value })
   }
 
-  handleSubmit = f => e => {
+  handleSubmit = ({ msgAdd, refetch }) => e => {
     e.preventDefault()
-    f()
+    msgAdd({ variables: { message: this.state.newItem } })
+      .then(refetch)
   }
 
   render() {
-    const { newItem } = this.state
     return (
       <div>
         <Helmet>
           <title>Home</title>
         </Helmet>
         <h3>Home</h3>
-        <Mutation mutation={gqlMessageAdd} variables={{ message: newItem }}>
-          {add => (
-            <Query query={gqlMessageList}>
-              {({
-                errors,
-                loading,
-                refetch,
-                data,
-              }) => {
-                if (errors) errors.forEach(e => console.error(e))
-                return (
-                  <div>
-                    <form onSubmit={this.handleSubmit(add)}>
-                      <div>
-                        <input type="text" value={newItem} onChange={this.textChange} />
-                        {' '}
-                        <button type="button" onClick={refetch}>
-                          Reload
-                        </button>
-                      </div>
-                      {loading && <div>loading...</div>}
-                      {data.MessageList.map(({ id, ...x }) => (
-                        <Item {...{ key: id, id, ...x }} />
-                      ))}
-                    </form>
-                  </div>
-                )
-              }}
-            </Query>
+        <Query query={gqlMessageList}>
+          {({ errors: errorQuery, loading, refetch, data }) => (
+            <Mutation mutation={gqlMessageAdd}>
+              {(msgAdd, { errors: errorAdd }) => (
+                <Mutation mutation={gqlMessagePatch}>
+                  {(msgPatch, { errors: errorPatch }) => (
+                    <Mutation
+                      mutation={gqlMessageDel}
+                      update={(cache, { data: { addTodo } }) => {
+                        // const { todos } = cache.readQuery({ query: GET_TODOS });
+                        // cache.writeQuery({
+                        //   query: GET_TODOS,
+                        //   data: { todos: todos.concat([addTodo]) }
+                        // });
+                      }}
+                    >
+                      {(msgDel, { errors: errorDel }) => {
+                        const errors = [errorQuery, errorPatch, errorAdd, errorDel].filter(Boolean)
+                        if (errors) errors.forEach(e => console.log(e))
+                        return List({
+                          msgAdd: this.handleSubmit({ msgAdd, refetch }),
+                          msgPatch,
+                          msgDel,
+                          data,
+                          refetch,
+                          newItem: this.state.newItem,
+                          textChange: this.inputChange('newItem'),
+                        })
+                      }}
+                    </Mutation>
+                  )}
+                </Mutation>
+              )}
+            </Mutation>
           )}
-        </Mutation>
+        </Query>
       </div>
     )
   }
