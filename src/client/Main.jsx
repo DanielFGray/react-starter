@@ -90,9 +90,10 @@ class Item extends React.Component {
 
 const List = ({ msgAdd, newItem, textChange, refetch, data, ...props }) => (
   <div>
+    <h3>Home</h3>
     <form onSubmit={msgAdd}>
       <input type="text" placeholder="enter a message" value={newItem} onChange={textChange} />
-      <button type="button" onClick={e => refetch()}>
+      <button type="button" onClick={_ => refetch()}>
         Reload
       </button>
     </form>
@@ -119,17 +120,17 @@ class Main extends React.Component {
 
   handleSubmit = ({ msgAdd, refetch }) => e => {
     e.preventDefault()
+    this.setState({ newItem: '' })
     msgAdd({ variables: { message: this.state.newItem } })
       .then(refetch)
   }
 
   render() {
     return (
-      <div>
+      <>
         <Helmet>
           <title>Home</title>
         </Helmet>
-        <h3>Home</h3>
         <Query query={gqlMessageList}>
           {({ errors: errorQuery, loading, refetch, data }) => (
             <Mutation mutation={gqlMessageAdd}>
@@ -166,7 +167,7 @@ class Main extends React.Component {
             </Mutation>
           )}
         </Query>
-      </div>
+      </>
     )
   }
 }
