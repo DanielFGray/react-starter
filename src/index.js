@@ -41,6 +41,16 @@ const app = new Koa()
   .use(bodyParser())
 
   .use(async (ctx, next) => {
+    try {
+      await next()
+    }
+    catch (e) {
+      ctx.status = 500
+      ctx.body = 'Internal Server Error'
+    }
+  })
+
+  .use(async (ctx, next) => {
     await next()
     const rt = ctx.response.get('X-Response-Time')
     console.log(`${ctx.method} ${ctx.url} ${ctx.status} - ${rt}`)
@@ -69,8 +79,8 @@ const app = new Koa()
     return next()
   })
 
-  .use(router.routes())
   .use(router.allowedMethods())
+  .use(router.routes())
 
   .listen(port, host, () => console.log(`
     server now running on http://${host}:${port}`))

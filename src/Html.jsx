@@ -1,4 +1,3 @@
-/* global __non_webpack_require__:false __APPBASE:false __MOUNT:false */
 /* eslint react/no-danger: off */
 import * as React from 'react'
 import { endsWith } from 'ramda'

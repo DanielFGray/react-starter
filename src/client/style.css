@@ -2,9 +2,9 @@
   --hue: 220;
   --hue: 220;
   --primary-color: hsl(var(--hue), 50%, 50%);
-  --color-bg: #131313;
-  --color-bg-alt: #333;
-  --color-text: #eee;
+  --color-bg: #eee;
+  --color-bg-alt: #ccc;
+  --color-text: #333;
 }
 
 * {
@@ -88,9 +88,9 @@ input[type] {
   border-radius: 4px;
   box-shadow: none;
   box-sizing: border-box;
+}
 
-  &:focus {
-    border: 1px solid var(--text-color);
-    outline: 0;
-  }
+input[type]:focus {
+  border: 1px solid var(--text-color);
+  outline: 0;
 }

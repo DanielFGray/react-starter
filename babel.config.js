@@ -2,16 +2,16 @@ module.exports = {
   presets: [
     ['@babel/preset-env', {
       targets: {
-        browsers: ['last 2 versions'],
         node: 'current',
       },
       loose: true,
-      useBuiltIns: 'usage',
+      useBuiltIns: 'entry',
+      corejs: 3,
     }],
     '@babel/preset-react',
   ],
   plugins: [
-    ['@babel/plugin-proposal-class-properties', { loose: true }],
+    // ['@babel/plugin-proposal-class-properties', { loose: true }],
     // ['@babel/plugin-proposal-pipeline-operator', { proposal: 'minimal' }],
     // '@babel/plugin-proposal-throw-expressions',
     // '@babel/plugin-syntax-dynamic-import',

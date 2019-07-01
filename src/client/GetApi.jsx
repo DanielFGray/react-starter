@@ -1,53 +1,32 @@
-import * as React from 'react'
-import PropTypes from 'prop-types'
+import React, { useState, useEffect } from 'react'
 
-export default class GetApi extends React.Component {
-  static propTypes = {
-    url: PropTypes.string.isRequired,
-    children: PropTypes.func.isRequired,
-    autoFetch: PropTypes.bool,
-    initData: PropTypes.any, // eslint-disable-line react/forbid-prop-types
-  }
-
-  static defaultProps = {
-    initData: null,
-    autoFetch: true,
-  }
-
-  state = {
-    data: this.props.initData,
+export default function useAPI(props) {
+  const [state, _setState] = useState({
+    data: props.initData,
     error: null,
     loading: true,
-  }
+  })
 
-  componentDidMount() {
-    if (this.props.autoFetch) {
-      this.fetch()
+  const setState = patch => state => _setState({ ...state, ...patch })
+
+  const refetch = async () => {
+    try {
+      setState({ loading: true })
+      const x = await fetch(`/api/v1${props.url || ''}`)
+      const { status, body } = await x.json()
+      if (status === 'ok') {
+        setState({ data: body, loading: false, error: null })
+      } else {
+        throw new Error(body)
+      }
+    } catch (e) {
+      setState({ error: e.message, loading: false })
     }
   }
 
-  fetch = () => {
-    this.setState({ loading: true })
-    fetch(`/api/v1${this.props.url || ''}`)
-      .then(x => x.json())
-      .then(res => {
-        if (res.status === 'ok') {
-          this.setState({ data: res.body, loading: false, error: null })
-        } else {
-          throw new Error(res.body)
-        }
-      })
-      .catch(e => this.setState({ error: e, loading: false }))
-  }
+  useEffect(() => {
+    refetch()
+  }, [])
 
-  render() {
-    const { data, error, loading } = this.state
-    return this.props.children({
-      seed: Math.random(),
-      reload: this.fetch,
-      data,
-      error,
-      loading,
-    })
-  }
+  return [state, refetch]
 }
