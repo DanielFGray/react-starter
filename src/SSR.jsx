@@ -6,34 +6,39 @@ import Html from './Html'
 import Routes from './client/Routes'
 import Layout from './client/Layout'
 
-export default ({ appBase, data }) => async ctx => {
-  if (typeof data === 'function') {
-    data = data() // eslint-disable-line no-param-reassign
-  }
-  const routerCtx = {}
-  const helmetCtx = {}
-  const App = (
-    <StaticRouter
-      basename={appBase}
-      location={ctx.url}
-      context={routerCtx}
-    >
-      <HelmetProvider context={helmetCtx}>
-        <Layout>
-          <Routes data={data} />
-        </Layout>
-      </HelmetProvider>
-    </StaticRouter>
-  )
-  const html = renderToString(App)
-  const { helmet } = helmetCtx
-  const body = renderToStaticMarkup(Html({ data, helmet, html }))
-  if (routerCtx.status) {
-    ctx.status = routerCtx.status
-  }
-  if (routerCtx.url) {
-    ctx.redirect(routerCtx.url)
-  } else {
-    ctx.body = `<!doctype html>${body}`
+export default function SSR({ appBase, getData }) {
+  return async ctx => {
+    const routerCtx = {}
+    const helmetCtx = {}
+
+    const Init = props => (
+      <StaticRouter
+        basename={appBase}
+        location={ctx.url}
+        context={routerCtx}
+      >
+        <HelmetProvider context={helmetCtx}>
+          <Layout>
+            <Routes {...props} />
+          </Layout>
+        </HelmetProvider>
+      </StaticRouter>
+    )
+
+    const data = await getData(ctx.url)
+
+    const html = renderToString(<Init initData={data} />)
+    const { helmet } = helmetCtx
+
+    if (routerCtx.status) {
+      ctx.status = routerCtx.status
+    }
+
+    if (routerCtx.url) {
+      ctx.redirect(routerCtx.url)
+      return
+    }
+
+    ctx.body = `<!doctype html>${renderToStaticMarkup(Html({ data, helmet, html }))}`
   }
 }

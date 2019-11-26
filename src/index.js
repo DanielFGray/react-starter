@@ -14,8 +14,11 @@ const {
   publicDir,
 } = __non_webpack_require__('../config')
 
-const data = () => ({
-  list: [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }],
+const getData = async () => ({
+  list: [
+    { id: 1, name: 'foo' },
+    { id: 2, name: 'bar' },
+  ],
   seed: Math.random(),
 })
 
@@ -25,7 +28,7 @@ const router = new Router()
   })
 
   .get('/api/v1', async ctx => {
-    ctx.body = { status: 'ok', body: data() }
+    ctx.body = { status: 'ok', body: await getData() }
   })
 
   .all('/api*', async ctx => {
@@ -33,7 +36,7 @@ const router = new Router()
     ctx.body = { status: 'error', body: 'not implemented' }
   })
 
-  .get(['/', '/*'], SSR({ data, appBase }))
+  .get('/*', SSR({ getData, appBase }))
 
 const app = new Koa()
 
@@ -43,8 +46,8 @@ const app = new Koa()
   .use(async (ctx, next) => {
     try {
       await next()
-    }
-    catch (e) {
+    } catch (e) {
+      console.error(e)
       ctx.status = 500
       ctx.body = 'Internal Server Error'
     }
@@ -82,11 +85,10 @@ const app = new Koa()
   .use(router.allowedMethods())
   .use(router.routes())
 
-  .listen(port, host, () => console.log(`
-    server now running on http://${host}:${port}`))
+  .listen(port, host, () => console.info(`server now running on http://${host}:${port}`))
 
-process.on('exit', () => console.log('exiting!'))
-process.on('SIGINT', () => console.log('interrupted!'))
+process.on('exit', () => console.info('exiting!'))
+process.on('SIGINT', () => console.info('interrupted!'))
 process.on('uncaughtException', e => {
   console.error(e)
   process.exit(1)

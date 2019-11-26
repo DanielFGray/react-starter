@@ -1,31 +1,38 @@
 import * as React from 'react'
 import { Helmet } from 'react-helmet-async'
-import useApi from './GetApi'
+import useJson from './useJson'
 
 const Stringify = data => <pre>{JSON.stringify(data, null, 2)}</pre>
 
-export default function Main (props) {
+export default function Main(props) {
   const [{
     error,
     loading,
-    reload,
     data,
-  }, refetch] = useApi({ url: "/", autoFetch: false, initData: props.initData })
+  }, refetch] = useJson({ url: '/api/v1', autoFetch: false })
+
+  if (error) {
+    return (
+      <>
+        <h1>oops!</h1>
+        <p>{error.message || Stringify(error)}</p>
+      </>
+    )
+  }
+
   return (
     <div>
       <Helmet>
         <title>Home</title>
       </Helmet>
       <div>
-        <button type="button" onClick={refetch}>
+        <button type="button" onClick={e => refetch()}>
           Reload
         </button>
       </div>
       {Stringify({
-        seed: Math.random(),
         loading,
-        data,
-        props,
+        data: data || props.initData,
       })}
     </div>
   )
