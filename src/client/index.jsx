@@ -7,7 +7,7 @@ import Layout from './Layout'
 import './style.css'
 
 const Init = props => (
-  <Router basename={__appBase}>
+  <Router basename={process.env.APP_BASE}>
     <HelmetProvider>
       <Layout>
         <Routes {...props} />
@@ -18,5 +18,5 @@ const Init = props => (
 
 document.addEventListener('DOMContentLoaded', () => {
   const initData = window.__INIT_DATA // eslint-disable-line no-underscore-dangle
-  ReactDOM.hydrate(<Init initData={initData} />, document.getElementById(__mount))
+  ReactDOM.hydrate(<Init initData={initData} />, document.getElementById(process.env.MOUNT))
 })

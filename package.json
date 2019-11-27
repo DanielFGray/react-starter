@@ -1,10 +1,10 @@
 {
-  "name": "thunderlinks",
+  "name": "react-starter",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon -w webpack.config.js -w .babelrc -x 'webpack-dev-server -d -w --progress'",
+    "start": "nodemon -w webpack.config.js -w .babelrc -x 'webpack-dev-server -d -w --progress --port 8765'",
     "build": "rm -fr public; NODE_ENV=production webpack -p",
     "lint:css": "stylelint './src/**/*.css'",
     "lint:js": "eslint --cache --ext=.js,.jsx --ignore-path=.gitignore .",
@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^8.2.0",
     "nodemon": "^2.0.1",
     "ramda": "^0.26.1",
     "react": "^16.6.0",

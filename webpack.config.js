@@ -1,14 +1,22 @@
 /* eslint-disable import/no-extraneous-dependencies,global-require */
-
+require('dotenv').config()
+const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { DefinePlugin } = require('webpack')
 const merge = require('webpack-merge')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const config = require('./config.js')
 
-const constants = Object.entries(config)
-  .map(([k, v]) => [`__${k}`, JSON.stringify(v)])
-  .reduce((p, [k, v]) => Object.assign(p, { [k]: v }), {})
+const {
+  NODE_ENV,
+  PUBLIC_DIR,
+  APP_TITLE,
+  APP_BASE,
+  MOUNT,
+  HOST,
+  PORT,
+} = process.env
+
+const DEV_MODE = NODE_ENV === 'development'
 
 const rules = [
   {
@@ -45,11 +53,18 @@ const plugins = [
   new HtmlWebpackPlugin({
     template: 'src/client/html.ejs',
     inject: false,
-    title: config.appTitle,
-    appMountId: config.mount,
+    title: APP_TITLE,
+    appMountId: MOUNT,
     mobile: true,
   }),
-  new DefinePlugin(constants),
+  new DefinePlugin({
+    'process.env': {
+      NODE_ENV: JSON.stringify(NODE_ENV),
+      APP_BASE: JSON.stringify(APP_BASE),
+      APP_TITLE: JSON.stringify(APP_TITLE),
+      MOUNT: JSON.stringify(MOUNT),
+    },
+  }),
   new MiniCssExtractPlugin()
 ]
 
@@ -61,14 +76,14 @@ const stats = {
 
 const clientConfig = {
   name: 'client',
-  mode: config.nodeEnv,
-  entry: { main: './src/client/index' },
+  mode: NODE_ENV,
+  entry: ['./src/client/index'],
   resolve: {
     extensions: ['.js', '.jsx'],
   },
   output: {
-    path: config.publicDir,
-    filename: config.devMode ? '[name].js' : '[name]-[hash].js',
+    path: path.resolve(PUBLIC_DIR),
+    filename: DEV_MODE ? '[name].js' : '[name]-[hash].js',
   },
   module: {
     rules,
@@ -79,12 +94,12 @@ const clientConfig = {
 
 module.exports = merge(
   clientConfig,
-  config.devMode
+  DEV_MODE
     ? {
       devServer: {
-        host: config.host,
-        port: config.port,
-        contentBase: config.publicDir,
+        host: HOST,
+        port: PORT,
+        contentBase: PUBLIC_DIR,
         stats,
       },
     }
