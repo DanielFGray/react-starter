@@ -103,12 +103,6 @@ function Main() {
   const [msgPatch, { loading: patching, errors: errorPatch }] = useMutation(gqlMessagePatch)
   const [msgDel, { loading: deleting, errors: errorDel }] = useMutation(gqlMessageDel)
 
-  const handleSubmit = e => {
-    e.preventDefault()
-    msgAdd({ variables: { message: entry } })
-      .then(() => refetch())
-  }
-
   const errors = [errorQuery, errorPatch, errorAdd, errorDel].filter(Boolean)
   if (errors.length) {
     errors.forEach(e => console.log(e))
@@ -122,7 +116,14 @@ function Main() {
       </Helmet>
       <div>
         <h3>Home</h3>
-        <Form refetch={() => refetch()} submit={handleSubmit} />
+        <Form
+          refetch={() => refetch()}
+          submit={async e => {
+            preventDefault()
+            await msgAdd({ variales: { messae: entry } })
+            refetch()
+          }}
+        />
         <ul className="messageList">
           {data && data.MessageList && data.MessageList.map(({ id, ...x }) => (
             <Item key={id} msgPatch={msgPatch} msgDel={msgDel} {...x} id={id} />

@@ -1,17 +1,16 @@
 /* eslint-disable import/no-extraneous-dependencies,global-require */
 
+require('dotenv').config()
 const path = require('path')
-const { DefinePlugin } = require('webpack')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
 // const BabelMinifyWebpackPlugin = require('babel-minify-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const nodeExternals = require('webpack-node-externals')
-const config = require('./config.js')
 
-const constants = Object.entries(config)
-  .map(([k, v]) => [`__${k}`, JSON.stringify(v)])
-  .reduce((p, [k, v]) => Object.assign(p, { [k]: v }), {})
+const { NODE_ENV, PUBLIC_DIR, OUTPUT_DIR } = process.env
+
+const devMode = NODE_ENV === 'development'
 
 const cssLoaders = [
   {
@@ -55,28 +54,28 @@ const stats = {
 
 const clientConfig = {
   name: 'client',
-  mode: config.nodeEnv,
-  entry: { main: './src/client/index' },
+  mode: process.env.NODE_ENV,
+  entry: [ './src/client/index' ],
   resolve: {
     extensions: ['.js', '.jsx'],
   },
   output: {
-    path: config.publicDir,
-    filename: config.devMode ? '[name].js' : '[name]-[hash].js',
-    chunkFilename: config.devMode ? '[name].js' : '[id]-[chunkhash].js',
+    path: path.resolve(PUBLIC_DIR),
+    publicPath: '/',
+    filename: devMode ? '[name].js' : '[name]-[hash].js',
+    chunkFilename: devMode ? '[name].js' : '[id]-[chunkhash].js',
   },
   module: {
     rules: [...babelLoader, ...cssLoaders],
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: config.devMode ? '[name].css' : '[name]-[hash].css',
-      chunkFilename: config.devMode ? '[name].css' : '[id]-[chunkhash].css',
+      filename: devMode ? '[name].css' : '[name]-[hash].css',
+      chunkFilename: devMode ? '[name].css' : '[id]-[chunkhash].css',
     }),
-    new DefinePlugin({ ...constants, __browser: true }),
     new WebpackAssetsManifest({
       // https://github.com/webdeveric/webpack-assets-manifest/#readme
-      output: path.join(config.outputDir, './manifest.json'),
+      output: path.join(path.resolve(OUTPUT_DIR), './manifest.json'),
       writeToDisk: true,
     }),
   ],
@@ -85,7 +84,7 @@ const clientConfig = {
 
 const serverConfig = {
   name: 'server',
-  mode: config.nodeEnv,
+  mode: process.env.NODE_ENV,
   entry: { index: './src/index' },
   target: 'node',
   externals: [
@@ -98,15 +97,13 @@ const serverConfig = {
   },
   output: {
     filename: '[name].js',
-    path: config.outputDir,
+    path: path.resolve(OUTPUT_DIR),
   },
   module: {
     rules: babelLoader,
   },
-  plugins: [
-    new DefinePlugin({ ...constants, __BROWSER: false }),
-  ],
   stats,
 }
 
-module.exports = [clientConfig, serverConfig]
+module.exports = [
+  clientConfig, serverConfig]

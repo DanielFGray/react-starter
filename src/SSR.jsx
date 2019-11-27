@@ -11,10 +11,11 @@ import Html from './Html'
 import Routes from './client/Routes'
 import Layout from './client/Layout'
 
-export default ({ appBase, schema }) => {
+export default function SSR({ appBase, schema }) {
   const link = new SchemaLink({ schema })
   return async ctx => {
     try {
+      console.log(ctx.state)
       const client = new ApolloClient({
         ssrMode: true,
         cache: new InMemoryCache(),
@@ -50,7 +51,8 @@ export default ({ appBase, schema }) => {
         ctx.redirect(routerCtx.url)
         return
       } else {
-        ctx.body = `<!doctype html>${renderToStaticMarkup(Html({ data, helmet, html }))}`
+
+        ctx.body = `<!doctype html>${renderToStaticMarkup(Html({ data, helmet, html, appBase}))}`
       }
     } catch (e) {
       ctx.status = 500
