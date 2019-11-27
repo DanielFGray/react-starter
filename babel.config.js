@@ -4,7 +4,7 @@ module.exports = {
       targets: {
         browsers: ['last 2 versions'],
       },
-      useBuiltIns: 'usage',
+      useBuiltIns: 'entry',
       corejs: 3,
     }],
     '@babel/preset-react',
