@@ -11,20 +11,28 @@ import Html from './Html'
 import Routes from './client/Routes'
 import Layout from './client/Layout'
 
+const getAssets = ctx => {
+  const list = Object.values(
+    process.env.NODE_ENV === 'production'
+      ? ctx.state.manifest
+      : ctx.state.webpackStats.toJson().assetsByChunkName.main
+  )
+  return list.reduce((p, x) => {
+    if (/\.css$/.test(x)) {
+      p[0].push(x)
+    } else if (/\.js$/.test(x)) {
+      p[1].push(x)
+    }
+    return p
+  }, [[], []])
+}
+
+
 export default function SSR({ appBase, schema }) {
   const link = new SchemaLink({ schema })
   return async ctx => {
     try {
-      const [styles, scripts] = Object.entries(ctx.state.webpackStats.toJson().assetsByChunkName.main)
-        .reduce((p, [k, x]) => {
-          if (/\.css$/.test(x)) {
-            p[0].push(x)
-          } else if (/\.js$/.test(x)) {
-            p[1].push(x)
-          }
-          return p
-        }, [[], []])
-
+      const [styles, scripts] = getAssets(ctx)
       const client = new ApolloClient({
         ssrMode: true,
         cache: new InMemoryCache(),
