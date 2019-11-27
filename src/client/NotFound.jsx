@@ -1,5 +1,5 @@
 import * as React from 'react'
-import Helmet from 'react-helmet-async'
+import { Helmet } from 'react-helmet-async'
 
 const NotFound = props => {
   if (props.staticContext) {

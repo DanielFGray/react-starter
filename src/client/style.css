@@ -1,6 +1,5 @@
 :root {
   --hue: 220;
-  --hue: 220;
   --primary-color: hsl(var(--hue), 50%, 50%);
   --color-bg: #eee;
   --color-bg-alt: #ccc;
@@ -86,6 +85,7 @@ input[type] {
   background-color: var(--color-bg-alt);
   border: 1px solid var(--color-bg-alt);
   border-radius: 4px;
+  outline-width: 1px;
   box-shadow: none;
   box-sizing: border-box;
 
@@ -93,4 +93,12 @@ input[type] {
     border: 1px solid var(--text-color);
     outline: 0;
   }
+}
+
+.message .edit {
+  opacity: 0;
+}
+
+.message:hover .edit {
+  opacity: 1;
 }
