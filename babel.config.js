@@ -12,6 +12,7 @@ module.exports = {
   ],
   plugins: [
     'babel-plugin-graphql-tag',
+    'react-hot-loader/babel',
     // ['@babel/plugin-proposal-class-properties', { loose: true }],
     // ['@babel/plugin-proposal-pipeline-operator', { proposal: 'minimal' }],
     // '@babel/plugin-proposal-throw-expressions',

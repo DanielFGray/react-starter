@@ -4,11 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm-run-all -p dev:watch run:watch",
-    "dev:watch": "webpack -d --progress --watch",
-    "run:watch": "nodemon -w dist -x 'node dist'",
-    "prod:watch": "NODE_ENV=production webpack -p --progress --watch",
-    "prod": "NODE_ENV=production webpack -p",
+    "start": "nodemon -w src -x 'babel-node src'",
+    "build": "NODE_ENV=production webpack -p",
     "lint:css": "stylelint './src/**/*.css'",
     "lint:js": "eslint --cache --ext=.js,.jsx --ignore-path=.gitignore .",
     "lint:js-fix": "npm-run-all 'lint:js --fix'",
@@ -27,6 +24,7 @@
     "apollo-link-schema": "^1.1.1",
     "apollo-server": "^2.2.0",
     "apollo-server-koa": "^2.2.0",
+    "dotenv": "^8.2.0",
     "graphql": "14.5.8",
     "graphql-tag": "^2.10.0",
     "graphql-tools": "^4.0.3",
@@ -39,7 +37,7 @@
     "normalize.css": "^8.0.1",
     "ramda": "^0.26.1",
     "react": "^16.6.1",
-    "react-dom": "^16.6.1",
+    "react-dom": "npm:@hot-loader/react-dom",
     "react-helmet-async": "^1.0.4",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
@@ -49,7 +47,6 @@
     "@babel/cli": "^7.1.5",
     "@babel/core": "^7.1.5",
     "@babel/node": "^7.0.0",
-    "@babel/plugin-proposal-class-properties": "^7.7.4",
     "@babel/preset-env": "^7.1.5",
     "@babel/preset-react": "^7.0.0",
     "babel-eslint": "^10.0.3",
@@ -66,6 +63,7 @@
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.16.0",
     "eslint-plugin-react-hooks": "^2.3.0",
+    "koa-webpack": "^5.2.4",
     "mini-css-extract-plugin": "^0.8.0",
     "nodemon": "^2.0.1",
     "npm-run-all": "^4.1.3",
@@ -73,6 +71,7 @@
     "postcss-loader": "^3.0.0",
     "postcss-preset-env": "^6.4.0",
     "prop-types": "^15.6.2",
+    "react-hot-loader": "^4.12.18",
     "style-loader": "^1.0.0",
     "stylelint": "^12.0.0",
     "stylelint-config-standard": "^19.0.0",
@@ -80,6 +79,7 @@
     "webpack-assets-manifest": "^3.1.0",
     "webpack-bundle-analyzer": "^3.0.3",
     "webpack-cli": "^3.1.2",
-    "webpack-node-externals": "^1.7.2"
+    "webpack-node-externals": "^1.7.2",
+    "webpackbar": "^4.0.0"
   }
 }

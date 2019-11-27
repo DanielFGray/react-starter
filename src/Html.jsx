@@ -3,17 +3,13 @@ import * as React from 'react'
 import { endsWith } from 'ramda'
 import { partition } from './utils'
 
-const manifest = __non_webpack_require__('./manifest.json')
-
-const [styles, scripts] = partition([
-  endsWith('.css'),
-  endsWith('.js'),
-], Object.values(manifest))
-
 const Html = ({
   data,
   html,
   helmet,
+  appBase = '',
+  styles,
+  scripts,
 }) => (
   <html lang="en" {...helmet.htmlAttributes.toString()}>
     <head>
@@ -36,13 +32,13 @@ const Html = ({
           key={link}
           rel="stylesheet"
           type="text/css"
-          href={`${__appBase}/${link}`}
+          href={`${appBase}/${link}`}
         />
       ))}
     </head>
     <body {...helmet.bodyAttributes.toComponent()}>
       <div
-        id={__mount}
+        id="root"
         dangerouslySetInnerHTML={{
           __html: html,
         }}
@@ -60,7 +56,7 @@ const Html = ({
         <script
           key={js}
           type="text/javascript"
-          src={`${__appBase}/${js}`}
+          src={`${appBase}/${js}`}
         />
       ))}
     </body>

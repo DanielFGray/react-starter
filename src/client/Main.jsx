@@ -48,12 +48,19 @@ function Item({ id, message, msgPatch, msgDel }) {
     editingChange(false)
   }
 
+  const handleEscape = e => {
+    if (e.keyCode === 27) {
+      editingChange(false)
+    }
+  }
+
+
   return (
     <li className="message">
       <form onSubmit={doneEdit}>
         {editing ? (
           <>
-            <input type="text" value={entryText} onChange={e => entryChange(e.target.value)} />
+            <input type="text" value={entryText} onKeyDown={handleEscape} onChange={e => entryChange(e.target.value)} />
             <input type="submit" value="edit" onClick={doneEdit} />
             <button onClick={() => msgDel({ variables: { id } })}>
               Delete
@@ -78,8 +85,8 @@ function Form({ submit, refetch }) {
   return (
     <form onSubmit={e => {
       e.preventDefault()
+      submit(entry)
       entryChange('')
-      submit()
     }}>
       <div>
         <button type="button" onClick={refetch}>
@@ -103,18 +110,12 @@ function Main() {
   const [msgPatch, { loading: patching, errors: errorPatch }] = useMutation(gqlMessagePatch)
   const [msgDel, { loading: deleting, errors: errorDel }] = useMutation(gqlMessageDel)
 
-  const handleSubmit = e => {
-    e.preventDefault()
-    msgAdd({ variables: { message: entry } })
-      .then(() => refetch())
-  }
-
   const errors = [errorQuery, errorPatch, errorAdd, errorDel].filter(Boolean)
   if (errors.length) {
     errors.forEach(e => console.log(e))
     return 'there were errors :('
   }
-
+  const reload = () => refetch()
   return (
     <>
       <Helmet>
@@ -122,10 +123,16 @@ function Main() {
       </Helmet>
       <div>
         <h3>Home</h3>
-        <Form refetch={() => refetch()} submit={handleSubmit} />
+        <Form
+          refetch={reload}
+          submit={message => {
+            msgAdd({ variables: { message } })
+              .then(reload)
+          }}
+        />
         <ul className="messageList">
           {data && data.MessageList && data.MessageList.map(({ id, ...x }) => (
-            <Item key={id} msgPatch={msgPatch} msgDel={msgDel} {...x} id={id} />
+            <Item key={id} msgPatch={msgPatch} msgDel={x => msgDel(x).then(reload)} {...x} id={id} />
           ))}
         </ul>
       </div>

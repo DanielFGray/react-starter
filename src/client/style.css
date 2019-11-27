@@ -1,9 +1,9 @@
 :root {
   --hue: 220;
   --primary-color: hsl(var(--hue), 50%, 50%);
-  --color-bg: #eee;
-  --color-bg-alt: #ccc;
-  --color-text: #111;
+  --color-bg: #333;
+  --color-bg-alt: #666;
+  --color-text: #eee;
 }
 
 * {
@@ -19,11 +19,20 @@ body {
   font-size: 1.8rem;
   line-height: 1.618;
   max-width: 38em;
-  min-height: 100vh;
   margin: auto;
+  padding: 0;
   color: var(--color-text);
-  background-color: var(--color-bg);
-  padding: 13px;
+  background-color: #333;
+  scroll-behavior: smooth;
+}
+
+a,
+a:link {
+  color: var(--color-text);
+
+  &:hover {
+    text-decoration: none;
+  }
 }
 
 @media (max-width: 684px) {
@@ -81,17 +90,18 @@ button,
 input[type] {
   color: var(--text-color);
   padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
-  margin-bottom: 10px;
+  margin: 0.25em;
   background-color: var(--color-bg-alt);
-  border: 1px solid var(--color-bg-alt);
+  border: 2px solid var(--color-bg-alt);
   border-radius: 4px;
-  outline-width: 1px;
   box-shadow: none;
-  box-sizing: border-box;
+
+  &:hover {
+    border: 2px solid var(--color-bg);
+  }
 
   &:focus {
-    border: 1px solid var(--text-color);
-    outline: 0;
+    border: 2px inset var(--color-bg);
   }
 }
 
