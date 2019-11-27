@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import http from 'http'
 import app from './app'
+import Koa from 'koa'
 
 const { NODE_ENV, PORT, HOST } = process.env
 
@@ -15,30 +16,15 @@ process.on('uncaughtException', e => {
     process.exit(1)
 })
 
-;(async function main() {
-  try {
-    const koa = await app()
+async function main() {
+  const koa = new Koa()
 
-    if (NODE_ENV === 'development') {
-      const webpack = require('webpack')
-      const koaWebpack = require('koa-webpack')
-      const config = require('../webpack.config').find(c => c.name === 'client')
-      const compiler = webpack(config)
+  if (NODE_ENV === 'development') koa.use(await require('./dev').default(koa))
 
-      koa.use(await koaWebpack({
-        compiler,
-        devMiddleware: {
-          serverSideRender: {
+  await app(koa)
 
-          },
-        },
-      }))
-    }
-
-    const server = http.createServer(koa.callback())
-    server
-      .listen(PORT, HOST, () => console.info(`server now running on http://${HOST}:${PORT}`))
-  } catch (e) {
-    throw e
-  }
-})()
+  const server = http.createServer(koa.callback())
+  await new Promise(res => { server.listen(PORT, HOST, res) })
+  console.info(`server now running on http://${HOST}:${PORT}`)
+}
+main()

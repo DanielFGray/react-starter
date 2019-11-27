@@ -15,15 +15,24 @@ export default function SSR({ appBase, schema }) {
   const link = new SchemaLink({ schema })
   return async ctx => {
     try {
-      console.log(ctx.state)
+      const [styles, scripts] = Object.entries(ctx.state.webpackStats.toJson().assetsByChunkName.main)
+        .reduce((p, [k, x]) => {
+          if (/\.css$/.test(x)) {
+            p[0].push(x)
+          } else if (/\.js$/.test(x)) {
+            p[1].push(x)
+          }
+          return p
+        }, [[], []])
+
       const client = new ApolloClient({
         ssrMode: true,
         cache: new InMemoryCache(),
         link,
       })
-
       const routerCtx = {}
       const helmetCtx = {}
+
       const App = (
         <ApolloProvider client={client}>
           <StaticRouter
@@ -52,7 +61,9 @@ export default function SSR({ appBase, schema }) {
         return
       } else {
 
-        ctx.body = `<!doctype html>${renderToStaticMarkup(Html({ data, helmet, html, appBase}))}`
+        ctx.body = `<!doctype html>${renderToStaticMarkup(
+          Html({ data, helmet, html, styles, scripts, appBase }),
+        )}`
       }
     } catch (e) {
       ctx.status = 500

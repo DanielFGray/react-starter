@@ -6,8 +6,8 @@ import { ApolloProvider } from '@apollo/react-hooks'
 import { ApolloClient } from 'apollo-client'
 import { HttpLink } from 'apollo-link-http'
 import { InMemoryCache } from 'apollo-cache-inmemory'
-import Routes from './Routes'
 import Layout from './Layout'
+import Routes from './Routes'
 
 import 'normalize.css'
 import './style.css'
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const Init = (
     <ApolloProvider client={apolloClient}>
-      <Router basename={__appBase}>
+      <Router basename={process.env.APP_BASE}>
         <HelmetProvider>
           <Layout>
             <Routes />
@@ -39,5 +39,5 @@ document.addEventListener('DOMContentLoaded', () => {
     </ApolloProvider>
   )
 
-  ReactDOM.hydrate(Init, document.getElementById(__mount))
+  ReactDOM.hydrate(Init, document.getElementById(process.env.MOUNT))
 })

@@ -1,11 +1,12 @@
 import * as React from 'react'
 import { Helmet } from 'react-helmet-async'
+import { hot } from 'react-hot-loader/root';
 import Nav from './Nav'
 import Footer from './Footer'
 
 const { APP_TITLE } = process.env
 
-const Layout = ({ children }) => (
+export const Layout = ({ children }) => (
   <div className="layout">
     <Helmet
       defaultTitle={APP_TITLE}
@@ -18,4 +19,4 @@ const Layout = ({ children }) => (
     <Footer />
   </div>
 )
-export default Layout
+export default hot(Layout)
