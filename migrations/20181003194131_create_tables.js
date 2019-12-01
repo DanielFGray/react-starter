@@ -5,4 +5,6 @@ exports.up = knex => knex.schema
   .createTable('messages', table => {
     table.increments('id').primary()
     table.string('message')
+    table.string('owner')
+    table.timestamps(true, true)
   })

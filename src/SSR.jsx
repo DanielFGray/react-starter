@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { StaticRouter } from 'react-router'
 import { HelmetProvider } from 'react-helmet-async'
@@ -8,35 +8,32 @@ import { ApolloClient } from 'apollo-client'
 import { SchemaLink } from 'apollo-link-schema'
 import { InMemoryCache } from 'apollo-cache-inmemory'
 import Html from './Html'
-import Routes from './client/Routes'
 import Layout from './client/Layout'
 
 const getAssets = ctx => {
   const list = Object.values(
     process.env.NODE_ENV === 'production'
       ? ctx.state.manifest
-      : ctx.state.webpackStats.toJson().assetsByChunkName.main
+      : ctx.state.webpackStats.toJson().assetsByChunkName.main,
   )
   return list.reduce((p, x) => {
     if (/\.css$/.test(x)) {
-      p[0].push(x)
+      p.styles.push(x)
     } else if (/\.js$/.test(x)) {
-      p[1].push(x)
+      p.scripts.push(x)
     }
     return p
-  }, [[], []])
+  }, { styles: [], scripts: [] })
 }
 
-
 export default function SSR({ appBase, schema }) {
-  const link = new SchemaLink({ schema })
   return async ctx => {
     try {
-      const [styles, scripts] = getAssets(ctx)
+      const { styles, scripts } = getAssets(ctx)
       const client = new ApolloClient({
         ssrMode: true,
         cache: new InMemoryCache(),
-        link,
+        link: new SchemaLink({ schema }),
       })
       const routerCtx = {}
       const helmetCtx = {}
@@ -49,9 +46,7 @@ export default function SSR({ appBase, schema }) {
             context={routerCtx}
           >
             <HelmetProvider context={helmetCtx}>
-              <Layout>
-                <Routes />
-              </Layout>
+              <Layout />
             </HelmetProvider>
           </StaticRouter>
         </ApolloProvider>
@@ -59,20 +54,23 @@ export default function SSR({ appBase, schema }) {
 
       const html = await renderToStringWithData(App)
       const { helmet } = helmetCtx
-      const data = client.extract()
+      const data = { __INIT_DATA: client.extract() }
 
-      if (routerCtx.status) {
-        ctx.status = routerCtx.status
+      if (routerCtx.statusCode) {
+        ctx.status = routerCtx.statusCode
       }
       if (routerCtx.url) {
         ctx.redirect(routerCtx.url)
         return
-      } else {
-
-        ctx.body = `<!doctype html>${renderToStaticMarkup(
-          Html({ data, helmet, html, styles, scripts, appBase }),
-        )}`
       }
+      ctx.body = `<!doctype html>${renderToStaticMarkup(Html({
+        data,
+        helmet,
+        html,
+        styles,
+        scripts,
+        appBase,
+      }))}`
     } catch (e) {
       ctx.status = 500
       ctx.body = 'Error'
@@ -80,4 +78,8 @@ export default function SSR({ appBase, schema }) {
       process.exit(1)
     }
   }
+}
+
+if (module.hot) {
+  console.info('server side HMR')
 }

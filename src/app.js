@@ -1,37 +1,38 @@
-import Router from 'koa-router'
 import koaHelmet from 'koa-helmet'
+import kcompose from 'koa-compose'
 import { ApolloServer } from 'apollo-server-koa'
-import { logger, staticFiles } from './koaMiddleware'
-import schema from './schema'
+import send from 'koa-send'
 import SSR from './SSR'
+import schema from './schema'
 
-const {
-  APP_BASE,
-  PUBLIC_DIR,
-} = process.env
+const logger = () => async (ctx, next) => {
+  const start = Date.now()
+  await next()
+  const time = `${Date.now() - start}ms`
+  console.log(`${ctx.method} ${ctx.url} ${ctx.status} - ${time}`)
+}
 
-export default async function app(app) {
-  app.use(async (ctx, next) => {
-    try {
-      await next()
-    } catch (e) {
-      console.log(e)
-      ctx.status = 500
-      ctx.body = 'Internal Server Error'
+const staticFiles = opts => async (ctx, next) => {
+  try {
+    if (ctx.path !== '/') {
+      return await send(ctx, ctx.path, opts)
     }
-  })
+  } catch (e) {
+    /* fallthrough */
+  }
+  return next()
+}
 
-  app.use(koaHelmet())
-
+export default function app({
+  appBase,
+  publicDir,
+}) {
   const apolloServer = new ApolloServer({ schema })
-
-  app.use(logger())
-  app.use(koaHelmet())
-  app.use(staticFiles({ root: PUBLIC_DIR }))
-
-  apolloServer.applyMiddleware({ app })
-
-  app.use(SSR({ appBase: APP_BASE, schema }))
-
-  return app
+  return kcompose([
+    koaHelmet(),
+    logger(),
+    staticFiles({ root: publicDir }),
+    apolloServer.getMiddleware(),
+    SSR({ appBase, schema }),
+  ])
 }

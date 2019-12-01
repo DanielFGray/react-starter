@@ -6,6 +6,8 @@ export const typeDefs = gql`
   type Message {
     id: Int!
     message: String!
+    created_at: String!
+    updated_at: String!
   }
 
   type Query {
@@ -24,9 +26,9 @@ export const resolvers = {
     MessageList: () => db('messages').select(),
   },
   Mutation: {
-    MessageAdd: (_, { message }) => db('messages').insert({ message }).returning('*'),
-    MessagePatch: (_, { id, message }) => db('messages').where({ id }).update({ message }).returning('*'),
-    MessageDel: (_, { id }) => db('messages').where({ id }).delete(),
+    MessageAdd: async (_, { message }) => db('messages').insert({ message }).returning('*'),
+    MessagePatch: async (_, { id, message }) => db('messages').where({ id }).update({ message }).returning('*'),
+    MessageDel: async (_, { id }) => db('messages').where({ id }).delete(),
   },
 }
 

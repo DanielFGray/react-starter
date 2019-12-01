@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
@@ -7,16 +7,20 @@ import { ApolloClient } from 'apollo-client'
 import { HttpLink } from 'apollo-link-http'
 import { InMemoryCache } from 'apollo-cache-inmemory'
 import Layout from './Layout'
-import Routes from './Routes'
 
 import 'normalize.css'
 import './style.css'
 
-document.addEventListener('DOMContentLoaded', () => {
-  const initData = window.__INIT_DATA // eslint-disable-line no-underscore-dangle
+function main() {
   const cache = new InMemoryCache()
-  if (initData) {
-    cache.restore(initData)
+
+  try {
+    const initData = JSON.parse(window.__INIT_DATA) // eslint-disable-line no-underscore-dangle
+    if (initData) {
+      cache.restore(initData)
+    }
+  } catch (e) {
+    console.error('unable to load cache', e)
   }
 
   const apolloClient = new ApolloClient({
@@ -31,13 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     <ApolloProvider client={apolloClient}>
       <Router basename={process.env.APP_BASE}>
         <HelmetProvider>
-          <Layout>
-            <Routes />
-          </Layout>
+          <Layout />
         </HelmetProvider>
       </Router>
     </ApolloProvider>
   )
 
   ReactDOM.hydrate(Init, document.getElementById(process.env.MOUNT))
-})
+}
+
+document.addEventListener('DOMContentLoaded', main)

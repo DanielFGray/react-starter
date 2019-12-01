@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@apollo/react-hooks'
 import { Helmet } from 'react-helmet-async'
 
 const gqlMessageList = gql`
-  query messageList {
+  query {
     MessageList {
       message
       id
@@ -13,7 +13,7 @@ const gqlMessageList = gql`
 `
 
 const gqlMessageAdd = gql`
-  mutation messageAdd ($message: String!) {
+  mutation ($message: String!) {
     MessageAdd(message: $message) {
       message
       id
@@ -22,8 +22,8 @@ const gqlMessageAdd = gql`
 `
 
 const gqlMessagePatch = gql`
-  mutation messagePatch ($message: String! $id: Int!) {
-    MessagePatch(message: $message id: $id) {
+  mutation ($id: Int! $message: String!) {
+    MessagePatch(id: $id message: $message) {
       message
       id
     }
@@ -31,7 +31,7 @@ const gqlMessagePatch = gql`
 `
 
 const gqlMessageDel = gql`
-  mutation messageDel ($id: Int!) {
+  mutation ($id: Int!) {
     MessageDel(id: $id)
   }
 `
@@ -60,18 +60,21 @@ function Item({
     msgDel()
   }
 
-  const handleEscape = e => {
-    if (e.keyCode === 27) {
-      cancelEdit(e)
-    }
-  }
-
   return (
     <li className="message">
       <form onSubmit={doneEdit}>
         {editing ? (
           <>
-            <input type="text" value={entryText} onKeyDown={handleEscape} onChange={e => entryChange(e.target.value)} />
+            <input
+              type="text"
+              value={entryText}
+              onChange={e => entryChange(e.target.value)}
+              onKeyDown={e => {
+                if (e.keyCode === 27) {
+                  cancelEdit(e)
+                }
+              }}
+            />
             <input type="submit" value="update" onClick={doneEdit} />
             <button onClick={handleDelete}>
               Delete
@@ -119,10 +122,10 @@ function Form({ submit, refetch }) {
 }
 
 export default function Main() {
-  const { errors: errorQuery, loading, refetch, data } = useQuery(gqlMessageList)
-  const [msgAdd, { errors: errorAdd }] = useMutation(gqlMessageAdd)
-  const [msgPatch, { errors: errorPatch }] = useMutation(gqlMessagePatch)
-  const [msgDel, { errors: errorDel }] = useMutation(gqlMessageDel)
+  const { error: errorQuery, refetch, data } = useQuery(gqlMessageList)
+  const [msgAdd, { error: errorAdd }] = useMutation(gqlMessageAdd)
+  const [msgPatch, { error: errorPatch }] = useMutation(gqlMessagePatch)
+  const [msgDel, { error: errorDel }] = useMutation(gqlMessageDel)
 
   const errors = [errorQuery, errorPatch, errorAdd, errorDel].filter(Boolean)
   if (errors.length > 0) {
@@ -135,14 +138,21 @@ export default function Main() {
   const submit = message => {
     msgAdd({
       variables: { message },
-      update: (proxy, { data: { MessageAdd } }) => {
+      optimisticResponse: {
+        __typename: 'Mutation',
+        MessageAdd: {
+          __typename: 'Message',
+          id: null,
+          message,
+        },
+      },
+      update: (proxy, result) => {
         const cache = proxy.readQuery({ query: gqlMessageList })
         // Write our data back to the cache with the new comment in it
+        const MessageList = cache.MessageList.concat(result.data.MessageAdd)
         proxy.writeQuery({
           query: gqlMessageList,
-          data: {
-            MessageList: cache.MessageList.concat(MessageAdd),
-          },
+          data: { MessageList },
         })
       },
     })
@@ -167,26 +177,28 @@ export default function Main() {
                 variables: { id, message },
                 optimisticResponse: {
                   __typename: 'Mutation',
-                  messagePatch: {
+                  MessagePatch: {
                     __typename: 'Message',
                     id,
                     message,
                   },
                 },
-                update: (proxy, { data: { MessagePatch } }) => {
+                update: (proxy, result) => {
                   const cache = proxy.readQuery({ query: gqlMessageList })
                   const idx = cache.MessageList.findIndex(e => e.id === id)
                   const MessageList = cache.MessageList.slice(0, idx)
-                    .concat(MessagePatch, cache.MessageList.slice(idx + 1))
+                    .concat(result.data.MessagePatch, cache.MessageList.slice(idx + 1))
                   proxy.writeQuery({
                     query: gqlMessageList,
                     data: { MessageList },
                   })
                 },
               })}
+
               msgDel={() => msgDel({
                 variables: { id },
                 update: proxy => {
+                  if (!data.MessageDel) return
                   const cache = proxy.readQuery({ query: gqlMessageList })
                   const idx = cache.MessageList.findIndex(e => e.id === id)
                   const MessageList = cache.MessageList.slice(0, idx)

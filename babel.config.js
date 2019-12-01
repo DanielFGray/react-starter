@@ -12,19 +12,22 @@ module.exports = {
   ],
   plugins: [
     'babel-plugin-graphql-tag',
-    'react-hot-loader/babel',
-    // ['@babel/plugin-proposal-class-properties', { loose: true }],
-    // ['@babel/plugin-proposal-pipeline-operator', { proposal: 'minimal' }],
-    // '@babel/plugin-proposal-throw-expressions',
-    // '@babel/plugin-syntax-dynamic-import',
+    '@babel/plugin-proposal-optional-chaining',
+    '@babel/plugin-proposal-nullish-coalescing-operator',
+    // ['@babel/plugin-proposal-pipeline-operator', { proposal: 'fsharp' }],
     // '@babel/plugin-proposal-do-expressions',
+    // '@babel/plugin-proposal-throw-expressions',
+    // ['@babel/plugin-proposal-class-properties', { loose: true }],
+    // '@babel/plugin-syntax-dynamic-import',
     // ['@babel/plugin-proposal-decorators', { legacy: true }],
   ],
   env: {
+    development: {
+      plugins: [],
+    },
     production: {
       plugins: [
         'ramda',
-        // 'transform-react-remove-prop-types'
       ],
     },
   },

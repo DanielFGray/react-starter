@@ -4,9 +4,8 @@ require('dotenv').config()
 const path = require('path')
 const { DefinePlugin } = require('webpack')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
-// const BabelMinifyWebpackPlugin = require('babel-minify-webpack-plugin')
-const CleanWebpackPlugin = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const nodeExternals = require('webpack-node-externals')
 
 const { NODE_ENV, PUBLIC_DIR, OUTPUT_DIR, APP_TITLE, APP_BASE, MOUNT } = process.env
@@ -32,20 +31,18 @@ const cssLoaders = [
   },
 ]
 
-const babelLoader = [
-  {
-    test: /\.jsx?$/,
-    exclude: /node_modules/,
-    use: [
-      {
-        loader: 'babel-loader',
-        options: {
-          cacheDirectory: true,
-        },
+const babelLoader = {
+  test: /\.[tj]sx?$/,
+  exclude: /node_modules/,
+  use: [
+    {
+      loader: 'babel-loader',
+      options: {
+        cacheDirectory: true,
       },
-    ],
-  },
-]
+    },
+  ],
+}
 
 const stats = {
   chunks: false,
@@ -56,7 +53,9 @@ const stats = {
 const clientConfig = {
   name: 'client',
   mode: NODE_ENV,
-  entry: ['react-hot-loader/patch', './src/client/index'],
+  entry: [
+    './src/client/index',
+  ],
   resolve: {
     extensions: ['.js', '.jsx'],
   },
@@ -67,7 +66,7 @@ const clientConfig = {
     chunkFilename: devMode ? '[name].js' : '[id]-[chunkhash].js',
   },
   module: {
-    rules: [...babelLoader, ...cssLoaders],
+    rules: cssLoaders.concat(babelLoader),
   },
   plugins: [
     new MiniCssExtractPlugin({
@@ -87,6 +86,11 @@ const clientConfig = {
       output: path.join(path.resolve(OUTPUT_DIR), './manifest.json'),
       writeToDisk: true,
     }),
+    ...(
+      devMode
+        ? []
+        : [new OptimizeCssAssetsPlugin()]
+    ),
   ],
   stats,
 }
@@ -102,17 +106,17 @@ const serverConfig = {
     nodeExternals(),
   ],
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
   },
   output: {
     filename: '[name].js',
     path: path.resolve(OUTPUT_DIR),
+    publicPath: '/',
   },
   module: {
-    rules: babelLoader,
+    rules: [babelLoader],
   },
   stats,
 }
 
-module.exports = [
-  clientConfig, serverConfig]
+module.exports = [serverConfig, clientConfig]

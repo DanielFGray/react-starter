@@ -1,7 +1,5 @@
 /* eslint react/no-danger: off */
 import * as React from 'react'
-import { endsWith } from 'ramda'
-import { partition } from './utils'
 
 const Html = ({
   data,
@@ -38,7 +36,7 @@ const Html = ({
     </head>
     <body {...helmet.bodyAttributes.toComponent()}>
       <div
-        id="root"
+        id={process.env.MOUNT}
         dangerouslySetInnerHTML={{
           __html: html,
         }}
@@ -47,7 +45,10 @@ const Html = ({
         <script
           type="text/javascript"
           dangerouslySetInnerHTML={{
-            __html: `window.__INIT_DATA = ${JSON.stringify(data)}`,
+            __html: Object.entries(data)
+              .reduce((p, [k, v]) => p.concat(`window[${JSON.stringify(k)}]=\`${
+                JSON.stringify(v, null, process.env.NODE_ENV === 'development' ? 2 : undefined)
+              }\`;`), ''),
           }}
         />
       )}
