@@ -15,7 +15,7 @@ export const typeDefs = gql`
   type Mutation {
     MessageAdd(message: String!): [Message]
     MessagePatch(message: String! id: Int!): [Message]
-    MessageDel(id: Int!): [Message]
+    MessageDel(id: Int!): Int!
   }
 `
 
@@ -24,12 +24,9 @@ export const resolvers = {
     MessageList: () => db('messages').select(),
   },
   Mutation: {
-    MessageAdd: (_, { message }) => db('messages').insert({ message })
-      .then(resolvers.Query.MessageList),
-    MessagePatch: (_, { id, message }) => db('messages').where({ id }).update({ message })
-      .then(resolvers.Query.MessageList),
-    MessageDel: (_, { id }) => db('messages').where({ id }).delete()
-      .then(resolvers.Query.MessageList),
+    MessageAdd: (_, { message }) => db('messages').insert({ message }).returning('*'),
+    MessagePatch: (_, { id, message }) => db('messages').where({ id }).update({ message }).returning('*'),
+    MessageDel: (_, { id }) => db('messages').where({ id }).delete(),
   },
 }
 
