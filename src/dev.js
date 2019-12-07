@@ -5,17 +5,17 @@ import WebpackBar from 'webpackbar'
 import config from '../webpack.config'
 import hotServerMiddleware from './hotServerMiddleware'
 
-export default async function dev() {
+export async function dev() {
   const multiCompiler = webpack(config)
   const clientCompiler = multiCompiler.compilers.find(c => c.name === 'client')
 
-  multiCompiler.hooks.done.tap('built', () => {
-    console.log('finished building')
-  })
+  new WebpackBar({ profile: true })
+    .apply(clientCompiler)
 
   multiCompiler.compilers.forEach(c => {
-    new WebpackBar({ profile: true })
-      .apply(c)
+    c.hooks.done.tap('built', () => {
+      console.log('finished building')
+    })
   })
 
   return {

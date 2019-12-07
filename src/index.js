@@ -22,14 +22,21 @@ process.on('uncaughtException', die)
 
 async function startServer(cb) {
   const { HTTPS_CERT, HTTPS_KEY } = process.env
-  return (HTTPS_CERT && HTTPS_KEY
-    ? Promise.all([
+  let server
+  if (HTTPS_CERT && HTTPS_KEY) {
+    const [http2, cert, key] = await Promise.all([
       import('http2'),
       fs.readFile(HTTPS_CERT, 'utf8'),
       fs.readFile(HTTPS_KEY, 'utf8'),
-    ]).then(([http2, cert, key]) => http2.createSecureServer({ key, cert }, cb))
-    : import('http').then(http => http.createServer(cb)))
-    .then(server => new Promise(res => server.listen(Number(port), host, res)))
+    ])
+    server = http2.createSecureServer({ key, cert }, cb)
+  }
+
+  const http = await import('http')
+  server = http.createServer(cb)
+
+  await new Promise(res => server.listen(Number(port), host, res))
+  return server
 }
 
 (async function main() {
@@ -43,8 +50,8 @@ async function startServer(cb) {
       await next()
     }
   } else {
-    const dev = await import('./dev')
-    const { hotServerMiddleware, koaWebpack } = await dev.default()
+    const { dev } = await import('./dev')
+    const { hotServerMiddleware, koaWebpack } = await dev()
     pre = koaWebpack
     post = hotServerMiddleware
   }
