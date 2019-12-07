@@ -198,7 +198,7 @@ export default function Main() {
               msgDel={() => msgDel({
                 variables: { id },
                 update: proxy => {
-                  if (!data.MessageDel) return
+                  if (! data.MessageDel) return
                   const cache = proxy.readQuery({ query: gqlMessageList })
                   const idx = cache.MessageList.findIndex(e => e.id === id)
                   const MessageList = cache.MessageList.slice(0, idx)

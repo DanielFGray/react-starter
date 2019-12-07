@@ -8,7 +8,14 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const nodeExternals = require('webpack-node-externals')
 
-const { NODE_ENV, PUBLIC_DIR, OUTPUT_DIR, APP_TITLE, APP_BASE, MOUNT } = process.env
+const {
+  NODE_ENV,
+  PUBLIC_DIR,
+  OUTPUT_DIR,
+  APP_TITLE,
+  APP_BASE,
+  MOUNT,
+} = process.env
 
 const devMode = NODE_ENV === 'development'
 

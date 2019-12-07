@@ -22,7 +22,7 @@ const routes = [
 const links = routes.filter(x => x.label)
 
 
-export default function Layout () {
+export default function Layout() {
   return (
     <div className="layout">
       <Helmet

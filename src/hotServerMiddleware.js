@@ -35,7 +35,6 @@ import path from 'path'
 /* NPM */
 import requireFromString from 'require-from-string'
 import sourceMapSupport from 'source-map-support'
-import webpack from 'webpack'
 
 const OutputConfig = new WeakMap()
 

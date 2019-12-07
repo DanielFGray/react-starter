@@ -42,7 +42,8 @@ async function startServer(cb) {
 (async function main() {
   const koa = new Koa()
 
-  let pre, post // FIXME this is terrible
+  let pre // FIXME this is all terrible
+  let post
   if (nodeEnv !== 'development') {
     const manifest = JSON.parse(await fs.readFile('./dist/manifest.json', 'utf8'))
     pre = async (ctx, next) => {
