@@ -1,10 +1,10 @@
 exports.down = knex => knex.schema
-  .dropTableIfExists('messages')
+  .dropTableIfExists('blobs')
 
 exports.up = knex => knex.schema
-  .createTable('messages', table => {
+  .createTable('blobs', table => {
     table.increments('id').primary()
-    table.string('message')
+    table.string('blob')
     table.string('owner')
     table.timestamps(true, true)
   })

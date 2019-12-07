@@ -3,32 +3,32 @@ import gql from 'graphql-tag'
 import db from './db'
 
 export const typeDefs = gql`
-  type Message {
+  type Blob {
     id: Int!
-    message: String!
+    blob: String!
     created_at: String!
     updated_at: String!
   }
 
   type Query {
-    MessageList: [Message]
+    BlobList: [Blob]
   }
 
   type Mutation {
-    MessageAdd(message: String!): [Message]
-    MessagePatch(message: String! id: Int!): [Message]
-    MessageDel(id: Int!): Int!
+    BlobAdd(blob: String!): [Blob]
+    BlobPatch(blob: String! id: Int!): [Blob]
+    BlobDel(id: Int!): Int!
   }
 `
 
 export const resolvers = {
   Query: {
-    MessageList: () => db('messages').select(),
+    BlobList: () => db('blobs').select(),
   },
   Mutation: {
-    MessageAdd: async (_, { message }) => db('messages').insert({ message }).returning('*'),
-    MessagePatch: async (_, { id, message }) => db('messages').where({ id }).update({ message }).returning('*'),
-    MessageDel: async (_, { id }) => db('messages').where({ id }).delete(),
+    BlobAdd: async (_, { blob }) => db('blobs').insert({ blob }).returning('*'),
+    BlobPatch: async (_, { id, blob }) => db('blobs').where({ id }).update({ blob }).returning('*'),
+    BlobDel: async (_, { id }) => db('blobs').where({ id }).delete(),
   },
 }
 

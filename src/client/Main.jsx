@@ -3,65 +3,65 @@ import gql from 'graphql-tag'
 import { useMutation, useQuery } from '@apollo/react-hooks'
 import { Helmet } from 'react-helmet-async'
 
-const gqlMessageList = gql`
+const gqlBlobList = gql`
   query {
-    MessageList {
-      message
+    BlobList {
+      blob
       id
     }
   }
 `
 
-const gqlMessageAdd = gql`
-  mutation ($message: String!) {
-    MessageAdd(message: $message) {
-      message
+const gqlBlobAdd = gql`
+  mutation ($blob: String!) {
+    BlobAdd(blob: $blob) {
+      blob
       id
     }
   }
 `
 
-const gqlMessagePatch = gql`
-  mutation ($id: Int! $message: String!) {
-    MessagePatch(id: $id message: $message) {
-      message
+const gqlBlobPatch = gql`
+  mutation ($id: Int! $blob: String!) {
+    BlobPatch(id: $id blob: $blob) {
+      blob
       id
     }
   }
 `
 
-const gqlMessageDel = gql`
+const gqlBlobDel = gql`
   mutation ($id: Int!) {
-    MessageDel(id: $id)
+    BlobDel(id: $id)
   }
 `
 
 function Item({
-  message,
-  msgPatch,
-  msgDel,
+  blob,
+  blobPatch,
+  blobDel,
 }) {
-  const [entryText, entryChange] = useState(message)
+  const [entryText, entryChange] = useState(blob)
   const [editing, editingChange] = useState(false)
 
   const doneEdit = e => {
     e.preventDefault()
-    msgPatch(entryText)
+    blobPatch(entryText)
     editingChange(false)
   }
 
   const cancelEdit = e => {
     e.preventDefault()
-    entryChange(message)
+    entryChange(blob)
     editingChange(false)
   }
 
   const handleDelete = () => {
-    msgDel()
+    blobDel()
   }
 
   return (
-    <li className="message">
+    <li className="blob">
       <form onSubmit={doneEdit}>
         {editing ? (
           <>
@@ -82,7 +82,7 @@ function Item({
           </>
         ) : (
           <>
-            <label onClick={() => editingChange(true)}>{message}</label>
+            <label onClick={() => editingChange(true)}>{blob}</label>
             <button className="edit" onClick={() => editingChange(true)}>edit</button>
           </>
         )}
@@ -112,7 +112,7 @@ function Form({ submit, refetch }) {
       <div>
         <input
           type="text"
-          placeholder="enter a message"
+          placeholder="enter a blob"
           value={entry}
           onChange={e => entryChange(e.target.value)}
         />
@@ -122,10 +122,10 @@ function Form({ submit, refetch }) {
 }
 
 export default function Main() {
-  const { error: errorQuery, refetch, data } = useQuery(gqlMessageList)
-  const [msgAdd, { error: errorAdd }] = useMutation(gqlMessageAdd)
-  const [msgPatch, { error: errorPatch }] = useMutation(gqlMessagePatch)
-  const [msgDel, { error: errorDel }] = useMutation(gqlMessageDel)
+  const { error: errorQuery, refetch, data } = useQuery(gqlBlobList)
+  const [blobAdd, { error: errorAdd }] = useMutation(gqlBlobAdd)
+  const [blobPatch, { error: errorPatch }] = useMutation(gqlBlobPatch)
+  const [blobDel, { error: errorDel }] = useMutation(gqlBlobDel)
 
   const errors = [errorQuery, errorPatch, errorAdd, errorDel].filter(Boolean)
   if (errors.length > 0) {
@@ -135,24 +135,24 @@ export default function Main() {
 
   const reload = () => refetch()
 
-  const submit = message => {
-    msgAdd({
-      variables: { message },
+  const submit = blob => {
+    blobAdd({
+      variables: { blob },
       optimisticResponse: {
         __typename: 'Mutation',
-        MessageAdd: {
-          __typename: 'Message',
+        BlobAdd: {
+          __typename: 'Blob',
           id: null,
-          message,
+          blob,
         },
       },
       update: (proxy, result) => {
-        const cache = proxy.readQuery({ query: gqlMessageList })
+        const cache = proxy.readQuery({ query: gqlBlobList })
         // Write our data back to the cache with the new comment in it
-        const MessageList = cache.MessageList.concat(result.data.MessageAdd)
+        const BlobList = cache.BlobList.concat(result.data.BlobAdd)
         proxy.writeQuery({
-          query: gqlMessageList,
-          data: { MessageList },
+          query: gqlBlobList,
+          data: { BlobList },
         })
       },
     })
@@ -169,43 +169,43 @@ export default function Main() {
           refetch={reload}
           submit={submit}
         />
-        <ul className="messageList">
-          {data?.MessageList.map(({ id, ...x }) => (
+        <ul className="blobList">
+          {data?.BlobList.map(({ id, ...x }) => (
             <Item
               key={id}
-              msgPatch={message => msgPatch({
-                variables: { id, message },
+              blobPatch={blob => blobPatch({
+                variables: { id, blob },
                 optimisticResponse: {
                   __typename: 'Mutation',
-                  MessagePatch: {
-                    __typename: 'Message',
+                  BlobPatch: {
+                    __typename: 'Blob',
                     id,
-                    message,
+                    blob,
                   },
                 },
                 update: (proxy, result) => {
-                  const cache = proxy.readQuery({ query: gqlMessageList })
-                  const idx = cache.MessageList.findIndex(e => e.id === id)
-                  const MessageList = cache.MessageList.slice(0, idx)
-                    .concat(result.data.MessagePatch, cache.MessageList.slice(idx + 1))
+                  const cache = proxy.readQuery({ query: gqlBlobList })
+                  const idx = cache.BlobList.findIndex(e => e.id === id)
+                  const BlobList = cache.BlobList.slice(0, idx)
+                    .concat(result.data.BlobPatch, cache.BlobList.slice(idx + 1))
                   proxy.writeQuery({
-                    query: gqlMessageList,
-                    data: { MessageList },
+                    query: gqlBlobList,
+                    data: { BlobList },
                   })
                 },
               })}
 
-              msgDel={() => msgDel({
+              blobDel={() => blobDel({
                 variables: { id },
                 update: proxy => {
-                  if (! data.MessageDel) return
-                  const cache = proxy.readQuery({ query: gqlMessageList })
-                  const idx = cache.MessageList.findIndex(e => e.id === id)
-                  const MessageList = cache.MessageList.slice(0, idx)
-                    .concat(cache.MessageList.slice(idx + 1))
+                  if (! data.BlobDel) return
+                  const cache = proxy.readQuery({ query: gqlBlobList })
+                  const idx = cache.BlobList.findIndex(e => e.id === id)
+                  const BlobList = cache.BlobList.slice(0, idx)
+                    .concat(cache.BlobList.slice(idx + 1))
                   proxy.writeQuery({
-                    query: gqlMessageList,
-                    data: { MessageList },
+                    query: gqlBlobList,
+                    data: { BlobList },
                   })
                 },
               })}

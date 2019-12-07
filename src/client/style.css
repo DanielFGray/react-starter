@@ -105,10 +105,10 @@ input[type] {
   }
 }
 
-.message .edit {
+.blob .edit {
   opacity: 0;
 }
 
-.message:hover .edit {
+.blob:hover .edit {
   opacity: 1;
 }
