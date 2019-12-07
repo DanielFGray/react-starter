@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { NavLink } from 'react-router-dom'
-import { has } from 'ramda'
 
 // https://reacttraining.com/react-router/web/api/NavLink
 

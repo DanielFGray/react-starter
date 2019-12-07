@@ -26,9 +26,7 @@ module.exports = {
       plugins: [],
     },
     production: {
-      plugins: [
-        'ramda',
-      ],
+      plugins: [],
     },
   },
 }
