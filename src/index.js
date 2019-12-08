@@ -1,7 +1,10 @@
 import 'dotenv/config'
 import { promises as fs } from 'fs'
 import Koa from 'koa'
+import { SubscriptionServer } from 'subscriptions-transport-ws'
+import { execute, subscribe } from 'graphql'
 import app from './app'
+import schema from './schema'
 
 const {
   NODE_ENV: nodeEnv,
@@ -61,6 +64,17 @@ async function startServer(cb) {
   koa.use(app({ appBase, publicDir }))
   if (post) koa.use(post)
 
-  await startServer(koa.callback())
+  const server = await startServer(koa.callback())
   console.info(`server now running on http://${host}:${port}`)
+  SubscriptionServer.create(
+    {
+      execute,
+      subscribe,
+      schema,
+    },
+    {
+      server,
+      path: '/subscriptions',
+    },
+  )
 }())

@@ -1,33 +1,43 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import gql from 'graphql-tag'
 import { useMutation, useQuery } from '@apollo/react-hooks'
 import { Helmet } from 'react-helmet-async'
 
+const BlobParts = gql`
+  fragment BlobParts on Blob {
+    blob
+    id
+    title
+    created_at
+    updated_at
+  }
+`
+
 const gqlBlobList = gql`
   query {
     BlobList {
-      blob
-      id
+      ...BlobParts
     }
   }
+  ${BlobParts}
 `
 
 const gqlBlobAdd = gql`
-  mutation ($blob: String!) {
-    BlobAdd(blob: $blob) {
-      blob
-      id
+  mutation ($blob: String!, $title: String!) {
+    BlobAdd(blob: $blob, title: $title) {
+      ...BlobParts
     }
   }
+  ${BlobParts}
 `
 
 const gqlBlobPatch = gql`
-  mutation ($id: Int! $blob: String!) {
-    BlobPatch(id: $id blob: $blob) {
-      blob
-      id
+  mutation ($id: Int!, $blob: String!, $title: String!) {
+    BlobPatch(id: $id, blob: $blob, title: $title) {
+      ...BlobParts
     }
   }
+  ${BlobParts}
 `
 
 const gqlBlobDel = gql`
@@ -36,23 +46,40 @@ const gqlBlobDel = gql`
   }
 `
 
+const gqlBlobSubscription = gql`
+  subscription {
+    BlobAdded {
+      ...BlobParts
+    }
+  }
+  ${BlobParts}
+`
+
 function Item({
-  blob,
   blobPatch,
   blobDel,
+  id,
+  blob,
+  title,
+  created_at,
+  updated_at,
 }) {
-  const [entryText, entryChange] = useState(blob)
+  const [blobText, blobChange] = useState(blob)
+  const [titleText, titleChange] = useState(title)
   const [editing, editingChange] = useState(false)
 
   const doneEdit = e => {
     e.preventDefault()
-    blobPatch(entryText)
+    if (blobText === '') {
+      return blobDel()
+    }
+    blobPatch({ blob: blobText, title: titleText })
     editingChange(false)
   }
 
   const cancelEdit = e => {
     e.preventDefault()
-    entryChange(blob)
+    blobChange(blob)
     editingChange(false)
   }
 
@@ -61,20 +88,31 @@ function Item({
   }
 
   return (
-    <li className="blob">
-      <form onSubmit={doneEdit}>
+    <div className="blob">
+      <form onSubmit={doneEdit} style={{ display: 'inline' }}>
         {editing ? (
           <>
             <input
               type="text"
-              value={entryText}
-              onChange={e => entryChange(e.target.value)}
+              value={titleText}
+              onChange={e => titleChange(e.target.value)}
               onKeyDown={e => {
                 if (e.keyCode === 27) {
                   cancelEdit(e)
                 }
               }}
             />
+            <div>
+              <textarea
+                value={blobText}
+                onChange={e => blobChange(e.target.value)}
+                onKeyDown={e => {
+                  if (e.keyCode === 27) {
+                    cancelEdit(e)
+                  }
+                }}
+              />
+            </div>
             <input type="submit" value="update" onClick={doneEdit} />
             <button onClick={handleDelete}>
               Delete
@@ -82,68 +120,98 @@ function Item({
           </>
         ) : (
           <>
-            <label onClick={() => editingChange(true)}>{blob}</label>
-            <button className="edit" onClick={() => editingChange(true)}>edit</button>
+            <label htmlFor="edit" onClick={() => editingChange(true)}>
+              {title && (
+                <span style={{ fontWeight: 'bold' }}>
+                  {`${title}: `}
+                </span>
+              )}
+              {blob}
+            </label>
+            <button name="edit" className="edit" onClick={() => editingChange(true)}>edit</button>
           </>
         )}
       </form>
-    </li>
+    </div>
   )
 }
 
-// https://www.apollographql.com/docs/react/essentials/mutations.html#update
+function Form({ submit }) {
+  const [blobText, blobChange] = useState('')
+  const [titleText, titleChange] = useState('')
 
-function Form({ submit, refetch }) {
-  const [entry, entryChange] = useState('')
+  const handleSubmit = e => {
+    e.preventDefault()
+    submit({ blob: blobText, title: titleText })
+    blobChange('')
+  }
 
   return (
     <form
-      onSubmit={e => {
-        e.preventDefault()
-        submit(entry)
-        entryChange('')
-      }}
+      onSubmit={handleSubmit}
     >
-      <div>
-        <button type="button" onClick={refetch}>
-          Reload
-        </button>
-      </div>
       <div>
         <input
           type="text"
-          placeholder="enter a blob"
-          value={entry}
-          onChange={e => entryChange(e.target.value)}
+          placeholder="title"
+          value={titleText}
+          onChange={e => titleChange(e.target.value)}
         />
+        <div>
+          <textarea
+            placeholder="type something"
+            value={blobText}
+            onChange={e => blobChange(e.target.value)}
+          />
+        </div>
+        <button type="submit" onClick={handleSubmit}>
+          Send
+        </button>
       </div>
     </form>
   )
 }
 
 export default function Main() {
-  const { error: errorQuery, refetch, data } = useQuery(gqlBlobList)
+  const { data, refetch, error: errorQuery, subscribeToMore } = useQuery(gqlBlobList)
   const [blobAdd, { error: errorAdd }] = useMutation(gqlBlobAdd)
   const [blobPatch, { error: errorPatch }] = useMutation(gqlBlobPatch)
   const [blobDel, { error: errorDel }] = useMutation(gqlBlobDel)
 
+  useEffect(() => {
+    if (subscribeToMore) {
+      subscribeToMore({
+        document: gqlBlobSubscription,
+        updateQuery: (prev, { subscriptionData }) => {
+          const newBlob = subscriptionData.data.BlobAdded
+          console.log({ newBlob })
+          return {
+            ...prev,
+            BlobList: [].concat(newBlob, prev.BlobList)
+          }
+        },
+      })
+    }
+  }, [subscribeToMore])
+
   const errors = [errorQuery, errorPatch, errorAdd, errorDel].filter(Boolean)
   if (errors.length > 0) {
-    errors.forEach(e => console.log(e))
+    errors.forEach(e => { console.log(e) })
     return 'there were errors :('
   }
 
   const reload = () => refetch()
 
-  const submit = blob => {
+  const submit = ({ blob, title }) => {
     blobAdd({
-      variables: { blob },
+      variables: { blob, title },
       optimisticResponse: {
         __typename: 'Mutation',
         BlobAdd: {
           __typename: 'Blob',
           id: null,
           blob,
+          title,
         },
       },
       update: (proxy, result) => {
@@ -158,62 +226,67 @@ export default function Main() {
     })
   }
 
+  const blobList = data?.BlobList
+    .slice(0)
+    .sort((a, b) => b.updated_at - a.updated_at) ?? []
+
   return (
     <>
       <Helmet>
         <title>Home</title>
       </Helmet>
-      <div>
-        <h3>Home</h3>
-        <Form
-          refetch={reload}
-          submit={submit}
-        />
-        <ul className="blobList">
-          {data?.BlobList.map(({ id, ...x }) => (
-            <Item
-              key={id}
-              blobPatch={blob => blobPatch({
-                variables: { id, blob },
-                optimisticResponse: {
-                  __typename: 'Mutation',
-                  BlobPatch: {
-                    __typename: 'Blob',
-                    id,
-                    blob,
-                  },
+      <h3>Home</h3>
+      <button type="button" onClick={reload}>
+        Reload
+      </button>
+      <Form
+        refetch={reload}
+        submit={submit}
+      />
+      <div className="blobList">
+        {blobList.map(({ id, ...x }) => (
+          <Item
+            key={id}
+            blobPatch={({ blob, title }) => blobPatch({
+              variables: { id, blob, title },
+              optimisticResponse: {
+                __typename: 'Mutation',
+                BlobPatch: {
+                  __typename: 'Blob',
+                  id,
+                  blob,
+                  title,
                 },
-                update: (proxy, result) => {
-                  const cache = proxy.readQuery({ query: gqlBlobList })
-                  const idx = cache.BlobList.findIndex(e => e.id === id)
-                  const BlobList = cache.BlobList.slice(0, idx)
-                    .concat(result.data.BlobPatch, cache.BlobList.slice(idx + 1))
-                  proxy.writeQuery({
-                    query: gqlBlobList,
-                    data: { BlobList },
-                  })
-                },
-              })}
+              },
+              update: (proxy, result) => {
+                const cache = proxy.readQuery({ query: gqlBlobList })
+                const idx = cache.BlobList.findIndex(e => e.id === id)
+                const BlobList = cache.BlobList.slice(0, idx)
+                  .concat(result.data.BlobPatch, cache.BlobList.slice(idx + 1))
+                proxy.writeQuery({
+                  query: gqlBlobList,
+                  data: { BlobList },
+                })
+              },
+            })}
 
-              blobDel={() => blobDel({
-                variables: { id },
-                update: proxy => {
-                  if (! data.BlobDel) return
-                  const cache = proxy.readQuery({ query: gqlBlobList })
-                  const idx = cache.BlobList.findIndex(e => e.id === id)
-                  const BlobList = cache.BlobList.slice(0, idx)
-                    .concat(cache.BlobList.slice(idx + 1))
-                  proxy.writeQuery({
-                    query: gqlBlobList,
-                    data: { BlobList },
-                  })
-                },
-              })}
-              {...x}
-              id={id}
-            />
-          ))}
-        </ul>
+            blobDel={() => blobDel({
+              variables: { id },
+              update: proxy => {
+                const cache = proxy.readQuery({ query: gqlBlobList })
+                const idx = cache.BlobList.findIndex(e => e.id === id)
+                const BlobList = cache.BlobList.slice(0, idx)
+                  .concat(cache.BlobList.slice(idx + 1))
+                proxy.writeQuery({
+                  query: gqlBlobList,
+                  data: { BlobList },
+                })
+              },
+            })}
+            {...x}
+            id={id}
+          />
+        ))}
       </div>
     </>
   )

@@ -27,7 +27,16 @@ export default function app({
   appBase,
   publicDir,
 }) {
-  const apolloServer = new ApolloServer({ schema })
+  const apolloServer = new ApolloServer({
+    schema,
+    subscriptions: {
+      path: '/subscriptions',
+      onConnect: (connection, websocket, context) => {
+        console.log({ connection, websocket, context })
+      },
+    },
+  })
+
   return kcompose([
     koaHelmet(),
     logger(),

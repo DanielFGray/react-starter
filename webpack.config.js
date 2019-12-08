@@ -15,6 +15,8 @@ const {
   APP_TITLE,
   APP_BASE,
   MOUNT,
+  HOST,
+  PORT,
 } = process.env
 
 const devMode = NODE_ENV === 'development'
@@ -86,6 +88,8 @@ const clientConfig = {
         APP_BASE: JSON.stringify(APP_BASE),
         APP_TITLE: JSON.stringify(APP_TITLE),
         MOUNT: JSON.stringify(MOUNT),
+        HOST: JSON.stringify(HOST),
+        PORT: JSON.stringify(PORT),
       },
     }),
     new WebpackAssetsManifest({
