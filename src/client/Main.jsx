@@ -184,7 +184,9 @@ export default function Main() {
         document: gqlBlobSubscription,
         updateQuery: (prev, { subscriptionData }) => {
           const newBlob = subscriptionData.data.BlobAdded
-          console.log({ newBlob })
+          const exists = newBlob
+            .some(b => prev.BlobList.find(({ id }) => id === b.id))
+          if (exists) return prev
           return {
             ...prev,
             BlobList: [].concat(newBlob, prev.BlobList)
@@ -207,12 +209,14 @@ export default function Main() {
       variables: { blob, title },
       optimisticResponse: {
         __typename: 'Mutation',
-        BlobAdd: {
-          __typename: 'Blob',
-          id: null,
-          blob,
-          title,
-        },
+        BlobAdd: [
+          {
+            __typename: 'Blob',
+            id: null,
+            blob,
+            title,
+          },
+        ],
       },
       update: (proxy, result) => {
         const cache = proxy.readQuery({ query: gqlBlobList })
