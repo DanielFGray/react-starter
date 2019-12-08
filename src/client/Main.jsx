@@ -1,63 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import gql from 'graphql-tag'
-import { useMutation, useQuery } from '@apollo/react-hooks'
+import { useMutation, useQuery, useSubscription } from '@apollo/react-hooks'
 import { Helmet } from 'react-helmet-async'
-
-const BlobParts = gql`
-  fragment BlobParts on Blob {
-    blob
-    id
-    title
-    created_at
-    updated_at
-  }
-`
-
-const gqlBlobList = gql`
-  query {
-    BlobList {
-      ...BlobParts
-    }
-  }
-  ${BlobParts}
-`
-
-const gqlBlobAdd = gql`
-  mutation ($blob: String!, $title: String!) {
-    BlobAdd(blob: $blob, title: $title) {
-      ...BlobParts
-    }
-  }
-  ${BlobParts}
-`
-
-const gqlBlobPatch = gql`
-  mutation ($id: Int!, $blob: String!, $title: String!) {
-    BlobPatch(id: $id, blob: $blob, title: $title) {
-      ...BlobParts
-    }
-  }
-  ${BlobParts}
-`
-
-const gqlBlobDel = gql`
-  mutation ($id: Int!) {
-    BlobDel(id: $id)
-  }
-`
-
-const gqlBlobSubscription = gql`
-  subscription {
-    BlobAdded {
-      ...BlobParts
-    }
-  }
-  ${BlobParts}
-`
+import * as gql from './queries'
 
 function Item({
-  blobPatch,
-  blobDel,
+  blobUpdate,
+  blobDelete,
   id,
   blob,
   title,
@@ -71,9 +19,9 @@ function Item({
   const doneEdit = e => {
     e.preventDefault()
     if (blobText === '') {
-      return blobDel()
+      return blobDelete()
     }
-    blobPatch({ blob: blobText, title: titleText })
+    blobUpdate({ blob: blobText, title: titleText })
     editingChange(false)
   }
 
@@ -84,7 +32,7 @@ function Item({
   }
 
   const handleDelete = () => {
-    blobDel()
+    blobDelete()
   }
 
   return (
@@ -173,30 +121,63 @@ function Form({ submit }) {
 }
 
 export default function Main() {
-  const { data, refetch, error: errorQuery, subscribeToMore } = useQuery(gqlBlobList)
-  const [blobAdd, { error: errorAdd }] = useMutation(gqlBlobAdd)
-  const [blobPatch, { error: errorPatch }] = useMutation(gqlBlobPatch)
-  const [blobDel, { error: errorDel }] = useMutation(gqlBlobDel)
+  const { data, refetch, error: errorQuery, subscribeToMore } = useQuery(gql.BlobListQuery)
+  const [blobCreate, { error: errorCreate }] = useMutation(gql.BlobCreateMutation)
+  const [blobUpdate, { error: errorUpdate }] = useMutation(gql.BlobUpdateMutation)
+  const [blobDelete, { error: errorDel }] = useMutation(gql.BlobDeleteMutation)
+
+  useSubscription(gql.BlobDeletedSubscription, {
+    onSubscriptionData: ({ client, subscriptionData }) => {
+      const deleted = subscriptionData.data?.BlobDeleted
+      if (! deleted) return
+      const cache = client.readQuery({ query: gql.BlobListQuery })
+      const idx = cache.BlobList.findIndex(e => e.id === deleted)
+      if (! idx < 0) return
+      const BlobList = cache.BlobList.slice(0, idx)
+        .concat(cache.BlobList.slice(idx + 1))
+      client.writeQuery({
+        query: gql.BlobListQuery,
+        data: { BlobList },
+      })
+    },
+  })
+
+  useSubscription(gql.BlobUpdatedSubscription, {
+    onSubscriptionData: ({ client, subscriptionData }) => {
+      const updated = subscriptionData.data?.BlobUpdated
+      if (! updated) return
+      const cache = client.readQuery({ query: gql.BlobListQuery })
+      const idx = cache.BlobList.findIndex(e => e.id === updated[0].id)
+      if (! idx < 0) return
+      const BlobList = cache.BlobList.slice(0, idx)
+        .concat(subscriptionData.data.BlobUpdated, cache.BlobList.slice(idx + 1))
+      client.writeQuery({
+        query: gql.BlobListQuery,
+        data: { BlobList },
+      })
+    },
+  })
+
 
   useEffect(() => {
     if (subscribeToMore) {
       subscribeToMore({
-        document: gqlBlobSubscription,
+        document: gql.BlobCreatedSubscription,
         updateQuery: (prev, { subscriptionData }) => {
-          const newBlob = subscriptionData.data.BlobAdded
+          const newBlob = subscriptionData.data.BlobCreated
           const exists = newBlob
             .some(b => prev.BlobList.find(({ id }) => id === b.id))
           if (exists) return prev
           return {
             ...prev,
-            BlobList: [].concat(newBlob, prev.BlobList)
+            BlobList: [].concat(newBlob, prev.BlobList),
           }
         },
       })
     }
   }, [subscribeToMore])
 
-  const errors = [errorQuery, errorPatch, errorAdd, errorDel].filter(Boolean)
+  const errors = [errorQuery, errorUpdate, errorCreate, errorDel].filter(Boolean)
   if (errors.length > 0) {
     errors.forEach(e => { console.log(e) })
     return 'there were errors :('
@@ -205,11 +186,11 @@ export default function Main() {
   const reload = () => refetch()
 
   const submit = ({ blob, title }) => {
-    blobAdd({
+    blobCreate({
       variables: { blob, title },
       optimisticResponse: {
         __typename: 'Mutation',
-        BlobAdd: [
+        BlobCreate: [
           {
             __typename: 'Blob',
             id: null,
@@ -219,11 +200,11 @@ export default function Main() {
         ],
       },
       update: (proxy, result) => {
-        const cache = proxy.readQuery({ query: gqlBlobList })
+        const cache = proxy.readQuery({ query: gql.BlobListQuery })
         // Write our data back to the cache with the new comment in it
-        const BlobList = cache.BlobList.concat(result.data.BlobAdd)
+        const BlobList = cache.BlobList.concat(result.data.BlobCreate)
         proxy.writeQuery({
-          query: gqlBlobList,
+          query: gql.BlobListQuery,
           data: { BlobList },
         })
       },
@@ -251,11 +232,11 @@ export default function Main() {
         {blobList.map(({ id, ...x }) => (
           <Item
             key={id}
-            blobPatch={({ blob, title }) => blobPatch({
+            blobUpdate={({ blob, title }) => blobUpdate({
               variables: { id, blob, title },
               optimisticResponse: {
                 __typename: 'Mutation',
-                BlobPatch: {
+                BlobUpdate: {
                   __typename: 'Blob',
                   id,
                   blob,
@@ -263,26 +244,26 @@ export default function Main() {
                 },
               },
               update: (proxy, result) => {
-                const cache = proxy.readQuery({ query: gqlBlobList })
+                const cache = proxy.readQuery({ query: gql.BlobListQuery })
                 const idx = cache.BlobList.findIndex(e => e.id === id)
                 const BlobList = cache.BlobList.slice(0, idx)
-                  .concat(result.data.BlobPatch, cache.BlobList.slice(idx + 1))
+                  .concat(result.data.BlobUpdate, cache.BlobList.slice(idx + 1))
                 proxy.writeQuery({
-                  query: gqlBlobList,
+                  query: gql.BlobListQuery,
                   data: { BlobList },
                 })
               },
             })}
 
-            blobDel={() => blobDel({
+            blobDelete={() => blobDelete({
               variables: { id },
               update: proxy => {
-                const cache = proxy.readQuery({ query: gqlBlobList })
+                const cache = proxy.readQuery({ query: gql.BlobListQuery })
                 const idx = cache.BlobList.findIndex(e => e.id === id)
                 const BlobList = cache.BlobList.slice(0, idx)
                   .concat(cache.BlobList.slice(idx + 1))
                 proxy.writeQuery({
-                  query: gqlBlobList,
+                  query: gql.BlobListQuery,
                   data: { BlobList },
                 })
               },

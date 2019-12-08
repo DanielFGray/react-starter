@@ -1,8 +1,8 @@
 import { PostgresPubSub } from 'graphql-postgres-subscriptions'
 import { makeExecutableSchema } from 'graphql-tools'
-import gql from 'graphql-tag'
-import db from './db'
 import pg from 'pg'
+import db from './db'
+import gql from 'graphql-tag'
 
 const client = new pg.Client()
 client.connect()
@@ -23,15 +23,15 @@ export const typeDefs = gql`
   }
 
   type Mutation {
-    BlobAdd(blob: String! title: String): [Blob]
-    BlobPatch(blob: String! id: Int! title: String): [Blob]
-    BlobDel(id: Int!): Int!
+    BlobCreate(blob: String! title: String): [Blob]
+    BlobUpdate(blob: String! id: Int! title: String): [Blob]
+    BlobDelete(id: Int!): Int!
   }
 
   type Subscription {
-    BlobAdded: [Blob]
-    BlobPatched: [Blob]
-    BlobDeleted: [Blob]
+    BlobCreated: [Blob]
+    BlobUpdated: [Blob]
+    BlobDeleted: Int!
   }
 `
 
@@ -40,25 +40,25 @@ export const resolvers = {
     BlobList: async () => db('blobs').select(),
   },
   Mutation: {
-    BlobAdd: async (_, { blob, title }) => {
+    BlobCreate: async (_, { blob, title }) => {
       const data = await db('blobs').insert({ blob, title }).returning('*')
-      pubsub.publish('BlobAdded', { BlobAdded: data })
+      pubsub.publish('BlobCreated', { BlobCreated: data })
       return data
     },
-    BlobPatch: async (_, { id, blob, title }) => {
+    BlobUpdate: async (_, { id, blob, title }) => {
       const data = await db('blobs').where({ id }).update({ blob, title }).returning('*')
-      pubsub.publish('BlobPatched', { BlobPatched: data })
+      pubsub.publish('BlobUpdated', { BlobUpdated: data })
       return data
     },
-    BlobDel: async (_, { id }) => {
+    BlobDelete: async (_, { id }) => {
       const data = await db('blobs').where({ id }).delete()
       pubsub.publish('BlobDeleted', { BlobDeleted: id })
       return data
     },
   },
   Subscription: {
-    BlobAdded: { subscribe: () => pubsub.asyncIterator(['BlobAdded']) },
-    BlobPatched: { subscribe: () => pubsub.asyncIterator(['BlobPatched']) },
+    BlobCreated: { subscribe: () => pubsub.asyncIterator(['BlobCreated']) },
+    BlobUpdated: { subscribe: () => pubsub.asyncIterator(['BlobUpdated']) },
     BlobDeleted: { subscribe: () => pubsub.asyncIterator(['BlobDeleted']) },
   },
 }
