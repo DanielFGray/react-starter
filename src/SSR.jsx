@@ -1,14 +1,13 @@
 import React from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
+import { renderToStringWithData } from '@apollo/react-ssr'
 import { StaticRouter } from 'react-router'
 import { HelmetProvider } from 'react-helmet-async'
-import { renderToStringWithData } from '@apollo/react-ssr'
 import { ApolloProvider } from '@apollo/react-hooks'
 import { ApolloClient } from 'apollo-client'
 import { SchemaLink } from 'apollo-link-schema'
 import { InMemoryCache } from 'apollo-cache-inmemory'
-import Html from './Html'
 import Layout from './client/Layout'
+import * as Html from './Html'
 
 const getAssets = ctx => {
   const list = Object.values(
@@ -63,14 +62,14 @@ export default function SSR({ appBase, schema }) {
         ctx.redirect(routerCtx.url)
         return
       }
-      ctx.body = `<!doctype html>${renderToStaticMarkup(Html({
+      ctx.body = Html.toString({
         data,
         helmet,
         html,
         styles,
         scripts,
         appBase,
-      }))}`
+      })
     } catch (e) {
       ctx.status = 500
       ctx.body = 'Error'
