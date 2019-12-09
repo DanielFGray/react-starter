@@ -16,7 +16,6 @@ export function Component({
         {helmet.title.toComponent()}
         <meta charSet="utf-8" />
         <meta httpEquiv="Content-Language" content="en" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {helmet.meta.toComponent()}
         {helmet.style.toComponent()}
         {helmet.link.toComponent()}
@@ -26,7 +25,6 @@ export function Component({
           name="viewport"
           content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
         />
-        {helmet.link.toComponent()}
         {styles && styles.map(link => (
           <link
             key={link}
@@ -58,6 +56,7 @@ export function Component({
         {scripts && scripts.map(js => (
           <script
             key={js}
+            defer
             type="text/javascript"
             src={`${appBase}/${js}`}
           />

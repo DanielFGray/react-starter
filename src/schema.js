@@ -1,8 +1,8 @@
 import { PostgresPubSub } from 'graphql-postgres-subscriptions'
 import { makeExecutableSchema } from 'graphql-tools'
 import pg from 'pg'
-import db from './db'
 import gql from 'graphql-tag'
+import db from './db'
 
 const client = new pg.Client()
 client.connect()
