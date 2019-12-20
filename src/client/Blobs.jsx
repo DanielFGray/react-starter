@@ -38,49 +38,45 @@ function Item({
 
   return (
     <div className="blob">
-      <form onSubmit={doneEdit} style={{ display: 'inline' }}>
-        {editing ? (
-          <>
-            <input
-              type="text"
-              value={titleText}
-              onChange={e => titleChange(e.target.value)}
+      {editing ? (
+        <>
+          <input
+            type="text"
+            value={titleText}
+            onChange={e => titleChange(e.target.value)}
+            onKeyDown={e => {
+              if (e.keyCode === 27) {
+                cancelEdit(e)
+              }
+            }}
+          />
+          <div>
+            <textarea
+              value={blobText}
+              onChange={e => blobChange(e.target.value)}
               onKeyDown={e => {
                 if (e.keyCode === 27) {
                   cancelEdit(e)
                 }
               }}
             />
-            <div>
-              <textarea
-                value={blobText}
-                onChange={e => blobChange(e.target.value)}
-                onKeyDown={e => {
-                  if (e.keyCode === 27) {
-                    cancelEdit(e)
-                  }
-                }}
-              />
-            </div>
-            <input type="submit" value="update" onClick={doneEdit} />
-            <button onClick={handleDelete}>
-              Delete
-            </button>
-          </>
-        ) : (
-          <>
-            <label htmlFor="edit" onClick={() => editingChange(true)}>
-              {title && (
-                <span style={{ fontWeight: 'bold' }}>
-                  {`${title}: `}
-                </span>
-              )}
-              {blob}
-            </label>
-            <button name="edit" className="edit" onClick={() => editingChange(true)}>edit</button>
-          </>
-        )}
-      </form>
+          </div>
+          <button onClick={doneEdit}>Update</button>
+          <button onClick={handleDelete}>Delete</button>
+        </>
+      ) : (
+        <>
+          <label htmlFor="edit" onClick={() => editingChange(true)}>
+            {title && (
+              <span style={{ fontWeight: 'bold' }}>
+                {`${title}: `}
+              </span>
+            )}
+            {blob}
+          </label>
+          <button name="edit" className="edit" onClick={() => editingChange(true)}>edit</button>
+        </>
+      )}
     </div>
   )
 }
@@ -96,9 +92,7 @@ function Form({ submit }) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-    >
+    <form onSubmit={handleSubmit}>
       <div>
         <input
           type="text"
@@ -135,10 +129,11 @@ export default function Blob() {
   const { error: delSubErr } = useSubscription(gql.BlobDeletedSubscription, {
     onSubscriptionData: ({ client, subscriptionData }) => {
       const deleted = subscriptionData.data?.BlobDeleted
-      if (! deleted) return
+      if (deleted == null) return
+      console.log({ deleted })
       const cache = client.readQuery({ query: gql.BlobListQuery })
       const idx = cache.BlobList.findIndex(e => e.id === deleted)
-      if (! idx < 0) return
+      if (idx < 0) return
       const BlobList = cache.BlobList.slice(0, idx)
         .concat(cache.BlobList.slice(idx + 1))
       client.writeQuery({
@@ -153,8 +148,8 @@ export default function Blob() {
       const updated = subscriptionData.data?.BlobUpdated
       if (! updated) return
       const cache = client.readQuery({ query: gql.BlobListQuery })
-      const idx = cache.BlobList.findIndex(e => e.id === updated[0].id)
-      if (! idx < 0) return
+      const idx = cache.BlobList.findIndex(e => e.id === updated.id)
+      if (idx < 0) return
       const BlobList = cache.BlobList.slice(0, idx)
         .concat(subscriptionData.data.BlobUpdated, cache.BlobList.slice(idx + 1))
       client.writeQuery({
@@ -171,8 +166,7 @@ export default function Blob() {
         document: gql.BlobCreatedSubscription,
         updateQuery: (prev, { subscriptionData }) => {
           const newBlob = subscriptionData.data.BlobCreated
-          const exists = newBlob
-            .some(b => prev.BlobList.find(({ id }) => id === b.id))
+          const exists = prev.BlobList.find(({ id }) => id === newBlob.id)
           if (exists) return prev
           return {
             ...prev,
