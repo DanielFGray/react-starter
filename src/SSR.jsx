@@ -1,44 +1,67 @@
-import * as React from 'react'
-import { renderToString, renderToStaticMarkup } from 'react-dom/server'
+import React from 'react'
+import { renderToString } from 'react-dom/server'
 import { StaticRouter } from 'react-router'
 import { HelmetProvider } from 'react-helmet-async'
-import Html from './Html'
-import Routes from './client/Routes'
+import * as Html from './Html'
 import Layout from './client/Layout'
 
-export default function SSR({ appBase, getData }) {
+const getAssets = ctx => {
+  const list = Object.values(
+    process.env.NODE_ENV === 'production'
+      ? ctx.state.manifest
+      : ctx.state.webpackStats.toJson().assetsByChunkName.main,
+  )
+  return list.reduce((p, x) => {
+    if (/\.css$/.test(x)) {
+      p.styles.push(x)
+    } else if (/\.js$/.test(x)) {
+      p.scripts.push(x)
+    }
+    return p
+  }, { styles: [], scripts: [] })
+}
+
+export default function SSR({ appBase, schema }) {
   return async ctx => {
-    const routerCtx = {}
-    const helmetCtx = {}
+    try {
+      const { styles, scripts } = getAssets(ctx)
+      const routerCtx = {}
+      const helmetCtx = {}
 
-    const Init = props => (
-      <StaticRouter
-        basename={appBase}
-        location={ctx.url}
-        context={routerCtx}
-      >
-        <HelmetProvider context={helmetCtx}>
-          <Layout>
-            <Routes {...props} />
-          </Layout>
-        </HelmetProvider>
-      </StaticRouter>
-    )
+      const App = (
+        <StaticRouter
+          basename={appBase}
+          location={ctx.url}
+          context={routerCtx}
+        >
+          <HelmetProvider context={helmetCtx}>
+            <Layout />
+          </HelmetProvider>
+        </StaticRouter>
+      )
 
-    const data = await getData(ctx.url)
+      const html = await renderToString(App)
+      const { helmet } = helmetCtx
 
-    const html = renderToString(<Init initData={data} />)
-    const { helmet } = helmetCtx
-
-    if (routerCtx.status) {
-      ctx.status = routerCtx.status
+      if (routerCtx.statusCode) {
+        ctx.status = routerCtx.statusCode
+      }
+      if (routerCtx.url) {
+        ctx.redirect(routerCtx.url)
+        return
+      }
+      ctx.body = Html.toString({
+        helmet,
+        html,
+        styles,
+        scripts,
+        appBase,
+      })
+    } catch (e) {
+      ctx.status = 500
+      ctx.body = 'Error'
+      console.error(e)
+      process.exit(1)
     }
-
-    if (routerCtx.url) {
-      ctx.redirect(routerCtx.url)
-      return
-    }
-
-    ctx.body = `<!doctype html>${renderToStaticMarkup(Html({ data, helmet, html }))}`
   }
 }

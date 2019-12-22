@@ -1,65 +1,69 @@
 /* eslint react/no-danger: off */
-import * as React from 'react'
-import { endsWith } from 'ramda'
-import { partition } from './utils'
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 
-const manifest = __non_webpack_require__('./manifest.json')
-
-const [styles, scripts] = partition([
-  endsWith('.css'),
-  endsWith('.js'),
-], Object.values(manifest))
-
-const Html = ({
+export function Component({
   data,
   html,
   helmet,
-}) => (
-  <html lang="en">
-    <head>
-      <meta charSet="utf-8" />
-      <meta
-        httpEquiv="x-ua-compatible"
-        content="ie=edge,chrome=1"
-      />
-      {helmet.title.toComponent()}
-      {helmet.meta.toComponent()}
-      <meta
-        name="viewport"
-        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
-      />
-      {helmet.link.toComponent()}
-      {styles.map(css => (
-        <link
-          key={css}
-          rel="stylesheet"
-          type="text/css"
-          href={`${__appBase}/${css}`}
+  appBase = '',
+  styles,
+  scripts,
+}) {
+  return (
+    <html lang="en" {...helmet.htmlAttributes.toString()}>
+      <head>
+        {helmet.title.toComponent()}
+        <meta charSet="utf-8" />
+        <meta httpEquiv="Content-Language" content="en" />
+        {helmet.meta.toComponent()}
+        {helmet.style.toComponent()}
+        {helmet.link.toComponent()}
+        {helmet.noscript.toComponent()}
+        <meta charSet="utf-8" />
+        <meta
+          name="viewport"
+          content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
         />
-      ))}
-    </head>
-    <body>
-      <div
-        id={__mount}
-        dangerouslySetInnerHTML={{
-          __html: html,
-        }}
-      />
-      <script
-        type="text/javascript"
-        dangerouslySetInnerHTML={{
-          __html: `window.__INIT_DATA = ${JSON.stringify(data)}`,
-        }}
-      />
-      {scripts.map(js => (
-        <script
-          key={js}
-          type="text/javascript"
-          src={`${__appBase}/${js}`}
+        {styles && styles.map(link => (
+          <link
+            key={link}
+            rel="stylesheet"
+            type="text/css"
+            href={`${appBase}/${link}`}
+          />
+        ))}
+      </head>
+      <body {...helmet.bodyAttributes.toComponent()}>
+        <div
+          id={process.env.MOUNT}
+          dangerouslySetInnerHTML={{
+            __html: html,
+          }}
         />
-      ))}
-    </body>
-  </html>
-)
+        {data && (
+          <script
+            type="text/javascript"
+            dangerouslySetInnerHTML={{
+              __html: Object.entries(data)
+                .reduce((p, [k, v]) => p.concat(`window[${JSON.stringify(k)}]=${
+                  JSON.stringify(v, null, process.env.NODE_ENV === 'development' ? 2 : undefined)
+                };`), ''),
+            }}
+          />
+        )}
+        {helmet.script.toComponent()}
+        {scripts && scripts.map(js => (
+          <script
+            key={js}
+            defer
+            type="text/javascript"
+            src={`${appBase}/${js}`}
+          />
+        ))}
+      </body>
+    </html>
+  )
+}
 
-export default Html
+export const toString = props => `<!doctype html>${renderToStaticMarkup(Component(props))}`

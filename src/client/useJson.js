@@ -17,18 +17,14 @@ const reducer = (state, action) => {
   }
 }
 
-export default function useJson({
-  url,
-  autoFetch,
-  ...props
-}) {
+export default function useJson(url, { autoFetch = true, ...props } = {}) {
   const [state, dispatch] = useReducer(reducer, {
     data: null,
     error: null,
     loading: autoFetch,
   })
 
-  async function refetch(u = url, opts) {
+  async function refetch(u = url, { autoFetch: _, ...opts } = {}) {
     try {
       dispatch({ type: 'WAIT' })
       const x = await fetch(u, { ...props, ...opts })

@@ -1,17 +1,26 @@
 /* eslint-disable import/no-extraneous-dependencies,global-require */
 
+require('dotenv').config()
 const path = require('path')
 const { DefinePlugin } = require('webpack')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
-// const BabelMinifyWebpackPlugin = require('babel-minify-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const nodeExternals = require('webpack-node-externals')
-const config = require('./config.js')
 
-const constants = Object.entries(config)
-  .map(([k, v]) => [`__${k}`, JSON.stringify(v)])
-  .reduce((p, [k, v]) => Object.assign(p, { [k]: v }), {})
+const {
+  NODE_ENV,
+  PUBLIC_DIR,
+  OUTPUT_DIR,
+  APP_TITLE,
+  APP_BASE,
+  MOUNT,
+  HOST,
+  PORT,
+} = process.env
+
+const devMode = NODE_ENV === 'development'
 
 const cssLoaders = [
   {
@@ -32,20 +41,18 @@ const cssLoaders = [
   },
 ]
 
-const babelLoader = [
-  {
-    test: /\.jsx?$/,
-    exclude: /node_modules/,
-    use: [
-      {
-        loader: 'babel-loader',
-        options: {
-          cacheDirectory: true,
-        },
+const babelLoader = {
+  test: /\.jsx?$/,
+  exclude: /node_modules/,
+  use: [
+    {
+      loader: 'babel-loader',
+      options: {
+        cacheDirectory: true,
       },
-    ],
-  },
-]
+    },
+  ],
+}
 
 const stats = {
   chunks: false,
@@ -55,35 +62,55 @@ const stats = {
 
 const clientConfig = {
   name: 'client',
-  mode: config.nodeEnv,
-  entry: { main: './src/client/index' },
+  mode: NODE_ENV,
+  entry: [
+    './src/client/index',
+  ],
   resolve: {
     extensions: ['.js', '.jsx'],
   },
   output: {
-    path: config.publicDir,
-    filename: config.devMode ? '[name].js' : '[name]-[hash].js',
-    chunkFilename: '[id]-[chunkhash].js',
+    path: path.resolve(PUBLIC_DIR),
+    publicPath: '/',
+    filename: devMode ? '[name].js' : '[name]-[hash].js',
+    chunkFilename: devMode ? '[name].js' : '[id]-[chunkhash].js',
   },
   module: {
-    rules: [...babelLoader, ...cssLoaders],
+    rules: cssLoaders.concat(babelLoader),
   },
   plugins: [
-    new MiniCssExtractPlugin(),
-    new DefinePlugin(constants),
+    new MiniCssExtractPlugin({
+      filename: devMode ? '[name].css' : '[name]-[hash].css',
+      chunkFilename: devMode ? '[name].css' : '[id]-[chunkhash].css',
+    }),
+    new DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify(NODE_ENV),
+        APP_BASE: JSON.stringify(APP_BASE),
+        APP_TITLE: JSON.stringify(APP_TITLE),
+        MOUNT: JSON.stringify(MOUNT),
+        HOST: JSON.stringify(HOST),
+        PORT: JSON.stringify(PORT),
+      },
+    }),
     new WebpackAssetsManifest({
       // https://github.com/webdeveric/webpack-assets-manifest/#readme
-      output: path.join(config.outputDir, './manifest.json'),
+      output: path.join(path.resolve(OUTPUT_DIR), './manifest.json'),
       writeToDisk: true,
     }),
+    ...(
+      devMode
+        ? []
+        : []
+    ),
   ],
   stats,
 }
 
 const serverConfig = {
   name: 'server',
-  mode: config.nodeEnv,
-  entry: { index: './src/index' },
+  mode: NODE_ENV,
+  entry: { index: './src/SSR.jsx' },
   target: 'node',
   externals: [
     /config\.js$/,
@@ -94,22 +121,21 @@ const serverConfig = {
     extensions: ['.js', '.jsx'],
   },
   output: {
-    path: config.outputDir,
-    filename: '[name].js'
+    filename: '[name].js',
+    path: path.resolve(OUTPUT_DIR),
+    publicPath: '/',
   },
   module: {
-    rules: babelLoader,
+    rules: [babelLoader],
   },
-  plugins: [
-    new DefinePlugin({ ...constants, __BROWSER: false }),
-  ],
   stats,
 }
 
-if (! config.devMode) {
+if (! devMode) {
   clientConfig.plugins.push(
     // new BabelMinifyWebpackPlugin(),
     new CleanWebpackPlugin(['dist', 'public']),
+    new OptimizeCssAssetsPlugin(),
   )
 }
 

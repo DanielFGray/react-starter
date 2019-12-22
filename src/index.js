@@ -1,97 +1,60 @@
-/* global __non_webpack_require__:false */
-/* eslint-disable no-console */
+import 'dotenv/config'
+import { promises as fs } from 'fs'
 import Koa from 'koa'
-import Router from 'koa-router'
-import bodyParser from 'koa-body'
-import send from 'koa-send'
-import koaHelmet from 'koa-helmet'
-import SSR from './SSR'
+import app from './app'
 
-const {
-  appBase,
-  host,
-  port,
-  publicDir,
-} = __non_webpack_require__('../config')
+const { NODE_ENV, PORT, HOST } = process.env
 
-const getData = async () => ({
-  list: [
-    { id: 1, name: 'foo' },
-    { id: 2, name: 'bar' },
-  ],
-  seed: Math.random(),
-})
-
-const router = new Router()
-  .all('/ping', async ctx => {
-    ctx.body = 'pong'
-  })
-
-  .get('/api/v1', async ctx => {
-    ctx.body = { status: 'ok', body: await getData() }
-  })
-
-  .all('/api*', async ctx => {
-    ctx.status = 500
-    ctx.body = { status: 'error', body: 'not implemented' }
-  })
-
-  .get('/*', SSR({ getData, appBase }))
-
-const app = new Koa()
-
-  .use(koaHelmet())
-  .use(bodyParser())
-
-  .use(async (ctx, next) => {
-    try {
-      await next()
-    } catch (e) {
-      console.error(e)
-      ctx.status = 500
-      ctx.body = 'Internal Server Error'
-    }
-  })
-
-  .use(async (ctx, next) => {
-    await next()
-    const rt = ctx.response.get('X-Response-Time')
-    console.log(`${ctx.method} ${ctx.url} ${ctx.status} - ${rt}`)
-  })
-
-  .use(async (ctx, next) => {
-    const start = Date.now()
-    await next()
-    const ms = Date.now() - start
-    ctx.set('X-Response-Time', `${ms}ms`)
-  })
-
-  .use(async (ctx, next) => {
-    if (ctx.path.startsWith('/api')) {
-      ctx.set('Content-Type', 'application/json')
-    }
-    return next()
-  })
-
-  .use(async (ctx, next) => {
-    try {
-      if (ctx.path !== '/') {
-        return await send(ctx, ctx.path, { root: publicDir })
-      }
-    } catch (e) { /* fallthrough */ }
-    return next()
-  })
-
-  .use(router.allowedMethods())
-  .use(router.routes())
-
-  .listen(port, host, () => console.info(`server now running on http://${host}:${port}`))
-
-process.on('exit', () => console.info('exiting!'))
-process.on('SIGINT', () => console.info('interrupted!'))
-process.on('uncaughtException', e => {
+function die(e) {
   console.error(e)
   process.exit(1)
-})
+}
 
-export default app
+process.on('exit', () => die('exiting!'))
+process.on('SIGINT', () => die('interrupted!'))
+process.on('uncaughtException', die)
+
+async function startServer(cb) {
+  const { HTTPS_CERT, HTTPS_KEY } = process.env
+  let server
+  if (HTTPS_CERT && HTTPS_KEY) {
+    const [http2, cert, key] = await Promise.all([
+      import('http2'),
+      fs.readFile(HTTPS_CERT, 'utf8'),
+      fs.readFile(HTTPS_KEY, 'utf8'),
+    ])
+    server = http2.createSecureServer({ key, cert }, cb)
+  } else {
+    const http = await import('http')
+    server = http.createServer(cb)
+  }
+
+  await new Promise(res => server.listen(Number(PORT), HOST, res))
+  return server
+}
+
+(async function main() {
+  const koa = new Koa()
+
+  let pre // FIXME this is all terrible
+  let post
+  if (NODE_ENV !== 'development') {
+    const manifest = JSON.parse(await fs.readFile('./dist/manifest.json', 'utf8'))
+    pre = async (ctx, next) => {
+      ctx.state.manifest = manifest
+      await next()
+    }
+  } else {
+    const { dev } = await import('./dev')
+    const { hotServerMiddleware, koaWebpack } = await dev()
+    pre = koaWebpack
+    post = hotServerMiddleware
+  }
+
+  if (pre) koa.use(pre)
+  koa.use(app())
+  if (post) koa.use(post)
+
+  const server = await startServer(koa.callback())
+  console.info(`server now running on http://${HOST}:${PORT}`)
+}())

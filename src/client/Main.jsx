@@ -9,7 +9,7 @@ export default function Main(props) {
     error,
     loading,
     data,
-  }, refetch] = useJson({ url: '/api/v1', autoFetch: false })
+  }, refetch] = useJson('/api/v1/test')
 
   if (error) {
     return (
@@ -26,7 +26,7 @@ export default function Main(props) {
         <title>Home</title>
       </Helmet>
       <div>
-        <button type="button" onClick={e => refetch()}>
+        <button type="button" onClick={() => refetch()}>
           Reload
         </button>
       </div>
