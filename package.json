@@ -1,17 +1,16 @@
 {
-  "name": "thunderlinks",
-  "version": "1.0.0",
+  "name": "react-starter",
+  "version": "0.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm-run-all -p dev:watch run:watch",
-    "dev:watch": "webpack -d --progress --watch",
-    "run:watch": "nodemon -w dist -x 'node dist'",
-    "prod:watch": "NODE_ENV=production webpack -p --progress --watch",
-    "prod": "NODE_ENV=production webpack -p",
+    "start": "nodemon -w src -w webpack.config.js -w babel.config.js -x 'babel-node src'",
+    "build": "NODE_ENV=production webpack -p",
     "lint:css": "stylelint './src/**/*.css'",
-    "lint:js": "eslint --cache src --ext=.js,.jsx",
-    "lint": "npm-run-all -p lint:css lint:js"
+    "lint:js": "eslint --cache --ext=.js,.jsx --ignore-path=.gitignore .",
+    "lint:js-fix": "npm-run-all 'lint:js --fix'",
+    "lint": "npm-run-all -p lint:css lint:js",
+    "test": "npm-run-all lint"
   },
   "keywords": [],
   "author": "",
