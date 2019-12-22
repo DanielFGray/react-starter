@@ -6,7 +6,7 @@ import koaHelmet from 'koa-helmet'
 import SSR from './SSR'
 
 const {
-  APP_BASE,
+  APP_BASE: appBase,
   PUBLIC_DIR,
 } = process.env
 
@@ -26,7 +26,7 @@ export default function app() {
       ctx.body = { status: 'error', body: 'not implemented' }
     })
 
-    .get('/*', SSR({ appBase: APP_BASE }))
+    .get('/*', SSR())
 
 
   async function errHandler(ctx, next) {

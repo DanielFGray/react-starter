@@ -5,6 +5,8 @@ import { HelmetProvider } from 'react-helmet-async'
 import * as Html from './Html'
 import Layout from './client/Layout'
 
+const { APP_BASE } = process.env
+
 const getAssets = ctx => {
   const list = Object.values(
     process.env.NODE_ENV === 'production'
@@ -21,7 +23,7 @@ const getAssets = ctx => {
   }, { styles: [], scripts: [] })
 }
 
-export default function SSR({ appBase, schema }) {
+export default function SSR() {
   return async ctx => {
     try {
       const { styles, scripts } = getAssets(ctx)
@@ -30,7 +32,7 @@ export default function SSR({ appBase, schema }) {
 
       const App = (
         <StaticRouter
-          basename={appBase}
+          basename={APP_BASE}
           location={ctx.url}
           context={routerCtx}
         >
