@@ -42,7 +42,7 @@ export default function SSR() {
         </StaticRouter>
       )
 
-      const html = await renderToString(App)
+      const html = renderToString(App)
       const { helmet } = helmetCtx
 
       if (routerCtx.statusCode) {

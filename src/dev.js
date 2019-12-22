@@ -14,7 +14,7 @@ export async function dev() {
 
   multiCompiler.compilers.forEach(c => {
     c.hooks.done.tap('built', () => {
-      console.log('finished building')
+      console.log(`${c.name} finished building`)
     })
   })
 
