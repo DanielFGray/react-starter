@@ -4,7 +4,7 @@ require('dotenv').config()
 const path = require('path')
 const { DefinePlugin } = require('webpack')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
-const CleanWebpackPlugin = require('clean-webpack-plugin')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const nodeExternals = require('webpack-node-externals')
@@ -110,7 +110,7 @@ const clientConfig = {
 const serverConfig = {
   name: 'server',
   mode: NODE_ENV,
-  entry: { index: './src/SSR.jsx' },
+  entry: { index: devMode ? './src/SSR.jsx' : './src/index.js' },
   target: 'node',
   externals: [
     /config\.js$/,
@@ -134,7 +134,7 @@ const serverConfig = {
 if (! devMode) {
   clientConfig.plugins.push(
     // new BabelMinifyWebpackPlugin(),
-    new CleanWebpackPlugin(['dist', 'public']),
+    new CleanWebpackPlugin({ default: ['dist', 'public'] }),
     new OptimizeCssAssetsPlugin(),
   )
 }
