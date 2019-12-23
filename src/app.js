@@ -1,4 +1,5 @@
 import koaHelmet from 'koa-helmet'
+import bodyParser from 'koa-body'
 import kcompose from 'koa-compose'
 import { ApolloServer } from 'apollo-server-koa'
 import send from 'koa-send'
