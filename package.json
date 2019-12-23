@@ -10,7 +10,9 @@
     "lint:js": "eslint --cache --ext=.js,.jsx --ignore-path=.gitignore .",
     "lint:js-fix": "npm-run-all 'lint:js --fix'",
     "lint": "npm-run-all -p lint:css lint:js",
-    "test": "npm-run-all lint"
+    "test": "npm-run-all lint",
+    "self_sign_cert": "openssl req -x509 -newkey rsa:2048 -nodes -sha256 -subj '/CN=localhost' -keyout localhost-privkey.pem -out localhost-cert.pem",
+    "with_certs": "HTTPS_CERT=./localhost-cert.pem HTTPS_KEY=./localhost-privkey.pem babel-node src"
   },
   "keywords": [],
   "author": "",

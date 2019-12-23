@@ -7,3 +7,4 @@ node_modules/
 .tern-port
 secrets.js
 *.sqlite3
+localhost*.pem
