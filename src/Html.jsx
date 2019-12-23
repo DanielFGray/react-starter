@@ -2,11 +2,12 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
+const { APP_BASE } = process.env
+
 export function Component({
   data,
   html,
   helmet,
-  appBase = '',
   styles,
   scripts,
 }) {
@@ -30,7 +31,7 @@ export function Component({
             key={link}
             rel="stylesheet"
             type="text/css"
-            href={`${appBase}/${link}`}
+            href={`${APP_BASE}/${link}`}
           />
         ))}
       </head>
