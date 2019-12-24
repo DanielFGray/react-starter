@@ -8,12 +8,13 @@ import { SchemaLink } from 'apollo-link-schema'
 import { InMemoryCache } from 'apollo-cache-inmemory'
 import Layout from './client/Layout'
 import * as Html from './Html'
+import schema from './schema'
 
-const { APP_BASE } = process.env
+const { NODE_ENV, APP_BASE } = process.env
 
 const getAssets = ctx => {
   const list = Object.values(
-    process.env.NODE_ENV === 'production'
+    NODE_ENV === 'production'
       ? ctx.state.manifest
       : ctx.state.webpackStats.toJson().assetsByChunkName.main,
   )

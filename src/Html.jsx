@@ -2,7 +2,7 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
-const { APP_BASE } = process.env
+const { MOUNT, NODE_ENV, APP_BASE } = process.env
 
 export function Component({
   data,
@@ -37,7 +37,7 @@ export function Component({
       </head>
       <body {...helmet.bodyAttributes.toComponent()}>
         <div
-          id={process.env.MOUNT}
+          id={MOUNT}
           dangerouslySetInnerHTML={{
             __html: html,
           }}
@@ -48,7 +48,7 @@ export function Component({
             dangerouslySetInnerHTML={{
               __html: Object.entries(data)
                 .reduce((p, [k, v]) => p.concat(`window[${JSON.stringify(k)}]=${
-                  JSON.stringify(v, null, process.env.NODE_ENV === 'development' ? 2 : undefined)
+                  JSON.stringify(v, null, NODE_ENV === 'development' ? 2 : undefined)
                 };`), ''),
             }}
           />
@@ -59,7 +59,7 @@ export function Component({
             key={js}
             defer
             type="text/javascript"
-            src={`${appBase}/${js}`}
+            src={`${APP_BASE}/${js}`}
           />
         ))}
       </body>

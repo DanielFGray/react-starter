@@ -134,8 +134,10 @@ export default function Blob() {
       const cache = client.readQuery({ query: gql.BlobListQuery })
       const idx = cache.BlobList.findIndex(e => e.id === deleted)
       if (idx < 0) return
-      const BlobList = cache.BlobList.slice(0, idx)
-        .concat(cache.BlobList.slice(idx + 1))
+      const BlobList = [
+        ...cache.BlobList.slice(0, idx),
+        ...cache.BlobList.slice(idx + 1),
+      ]
       client.writeQuery({
         query: gql.BlobListQuery,
         data: { BlobList },
@@ -150,8 +152,11 @@ export default function Blob() {
       const cache = client.readQuery({ query: gql.BlobListQuery })
       const idx = cache.BlobList.findIndex(e => e.id === updated.id)
       if (idx < 0) return
-      const BlobList = cache.BlobList.slice(0, idx)
-        .concat(subscriptionData.data.BlobUpdated, cache.BlobList.slice(idx + 1))
+      const BlobList = [
+        ...cache.BlobList.slice(0, idx),
+        subscriptionData.data.BlobUpdated,
+        ...cache.BlobList.slice(idx + 1),
+      ]
       client.writeQuery({
         query: gql.BlobListQuery,
         data: { BlobList },
@@ -170,7 +175,7 @@ export default function Blob() {
           if (exists) return prev
           return {
             ...prev,
-            BlobList: [].concat(newBlob, prev.BlobList),
+            BlobList: [newBlob, ...prev.BlobList],
           }
         },
       })
@@ -202,7 +207,7 @@ export default function Blob() {
       update: (proxy, result) => {
         const cache = proxy.readQuery({ query: gql.BlobListQuery })
         // Write our data back to the cache with the new comment in it
-        const BlobList = cache.BlobList.concat(result.data.BlobCreate)
+        const BlobList = [result.data.BlobCreate, ...cache.BlobList]
         proxy.writeQuery({
           query: gql.BlobListQuery,
           data: { BlobList },

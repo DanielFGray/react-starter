@@ -1,15 +1,17 @@
 require('dotenv/config')
 
+const { PGHOST, PGPORT, PGUSER, PGPASSWORD, PGDATABASE } = process.env
+
 module.exports = {
 
   development: {
     client: 'postgresql',
     connection: {
-      host: process.env.PGHOST,
-      port: process.env.PGPORT,
-      user: process.env.PGUSER,
-      password: process.env.PGPASSWORD,
-      database: process.env.PGDATABASE,
+      host: PGHOST,
+      port: PGPORT,
+      user: PGUSER,
+      password: PGPASSWORD,
+      database: PGDATABASE,
     },
     pool: {
       min: 2,
@@ -23,11 +25,11 @@ module.exports = {
   production: {
     client: 'postgresql',
     connection: {
-      host: process.env.PGHOST,
-      port: process.env.PGPORT,
-      user: process.env.PGUSER,
-      password: process.env.PGPASSWORD,
-      database: process.env.PGDATABASE,
+      host: PGHOST,
+      port: PGPORT,
+      user: PGUSER,
+      password: PGPASSWORD,
+      database: PGDATABASE,
     },
     pool: {
       min: 2,

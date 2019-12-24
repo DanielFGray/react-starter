@@ -50,6 +50,6 @@ export default function app() {
     time,
     staticFiles,
     apolloServer.getMiddleware(),
-    SSR(),
+    SSR,
   ])
 }

@@ -13,7 +13,7 @@ import Layout from './Layout'
 import 'normalize.css'
 import './style.css'
 
-const { HOST, PORT } = process.env
+const { HOST, PORT, APP_BASE, MOUNT } = process.env
 
 function main() {
   const cache = new InMemoryCache()
@@ -45,7 +45,7 @@ function main() {
 
   const Init = (
     <ApolloProvider client={apolloClient}>
-      <Router basename={process.env.APP_BASE}>
+      <Router basename={APP_BASE}>
         <HelmetProvider>
           <Layout />
         </HelmetProvider>
@@ -53,7 +53,7 @@ function main() {
     </ApolloProvider>
   )
 
-  ReactDOM.hydrate(Init, document.getElementById(process.env.MOUNT))
+  ReactDOM.hydrate(Init, document.getElementById(MOUNT))
 }
 
 document.addEventListener('DOMContentLoaded', main)

@@ -1,6 +1,6 @@
 import knex from 'knex'
 import config from '../knexfile'
 
-const env = process.env.NODE_ENV
+const { NODE_ENV } = process.env
 
-export default knex(config[env])
+export default knex(config[NODE_ENV])
