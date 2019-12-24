@@ -6,11 +6,13 @@ import * as gql from './queries'
 function Item({
   blobUpdate,
   blobDelete,
-  blob,
-  title,
-  // id,
-  // created_at,
-  // updated_at,
+  data: {
+    blob,
+    title,
+    // id,
+    // created_at,
+    // updated_at,
+  },
 }) {
   const [blobText, blobChange] = useState(blob)
   const [titleText, titleChange] = useState(title)
@@ -129,8 +131,7 @@ export default function Blob() {
   const { error: delSubErr } = useSubscription(gql.BlobDeletedSubscription, {
     onSubscriptionData: ({ client, subscriptionData }) => {
       const deleted = subscriptionData.data?.BlobDeleted
-      if (deleted == null) return
-      console.log({ deleted })
+      if (! deleted) return
       const cache = client.readQuery({ query: gql.BlobListQuery })
       const idx = cache.BlobList.findIndex(e => e.id === deleted)
       if (idx < 0) return
@@ -164,7 +165,6 @@ export default function Blob() {
     },
   })
 
-
   useEffect(() => {
     if (subscribeToMore) {
       subscribeToMore({
@@ -182,10 +182,16 @@ export default function Blob() {
     }
   }, [subscribeToMore])
 
-  const errors = [errorQuery, errorUpdate, errorCreate, errorDel, delSubErr, updSubErr].filter(Boolean)
+  const errors = [
+    errorQuery,
+    errorUpdate,
+    errorCreate,
+    errorDel,
+    delSubErr,
+    updSubErr,
+  ].filter(Boolean)
   if (errors.length > 0) {
     errors.forEach(e => { console.log(e) })
-    return 'there were errors :('
   }
 
   const reload = () => refetch()
@@ -206,7 +212,6 @@ export default function Blob() {
       },
       update: (proxy, result) => {
         const cache = proxy.readQuery({ query: gql.BlobListQuery })
-        // Write our data back to the cache with the new comment in it
         const BlobList = [result.data.BlobCreate, ...cache.BlobList]
         proxy.writeQuery({
           query: gql.BlobListQuery,
@@ -220,6 +225,50 @@ export default function Blob() {
     .slice(0)
     .sort((a, b) => b.updated_at - a.updated_at) ?? []
 
+  const updateBlob = id => ({ blob, title }) => blobUpdate({
+    variables: { id, blob, title },
+    optimisticResponse: {
+      __typename: 'Mutation',
+      BlobUpdate: {
+        __typename: 'Blob',
+        id,
+        blob,
+        title,
+      },
+    },
+    update: (proxy, result) => {
+      const cache = proxy.readQuery({ query: gql.BlobListQuery })
+      const idx = cache.BlobList.findIndex(e => e.id === id)
+      if (idx < 0) return
+      const BlobList = [
+        ...cache.BlobList.slice(0, idx),
+        result.data.BlobUpdate,
+        ...cache.BlobList.slice(idx + 1),
+      ]
+      proxy.writeQuery({
+        query: gql.BlobListQuery,
+        data: { BlobList },
+      })
+    },
+  })
+
+  const deleteBlob = id => () => blobDelete({
+    variables: { id },
+    update: proxy => {
+      const cache = proxy.readQuery({ query: gql.BlobListQuery })
+      const idx = cache.BlobList.findIndex(e => e.id === id)
+      if (idx < 0) return
+      const BlobList = [
+        ...cache.BlobList.slice(0, idx),
+        ...cache.BlobList.slice(idx + 1),
+      ]
+      proxy.writeQuery({
+        query: gql.BlobListQuery,
+        data: { BlobList },
+      })
+    },
+  })
+
   return (
     <>
       <Helmet>
@@ -229,52 +278,16 @@ export default function Blob() {
       <button type="button" onClick={reload}>
         Reload
       </button>
-      <Form
-        refetch={reload}
-        submit={submit}
-      />
+      <Form refetch={reload} submit={submit} />
+      {errors.length > 0 && 'there were errors :('}
       <div className="blobList">
         {blobList.map(({ id, ...x }) => (
           <Item
             key={id}
-            blobUpdate={({ blob, title }) => blobUpdate({
-              variables: { id, blob, title },
-              optimisticResponse: {
-                __typename: 'Mutation',
-                BlobUpdate: {
-                  __typename: 'Blob',
-                  id,
-                  blob,
-                  title,
-                },
-              },
-              update: (proxy, result) => {
-                const cache = proxy.readQuery({ query: gql.BlobListQuery })
-                const idx = cache.BlobList.findIndex(e => e.id === id)
-                const BlobList = cache.BlobList.slice(0, idx)
-                  .concat(result.data.BlobUpdate, cache.BlobList.slice(idx + 1))
-                proxy.writeQuery({
-                  query: gql.BlobListQuery,
-                  data: { BlobList },
-                })
-              },
-            })}
-
-            blobDelete={() => blobDelete({
-              variables: { id },
-              update: proxy => {
-                const cache = proxy.readQuery({ query: gql.BlobListQuery })
-                const idx = cache.BlobList.findIndex(e => e.id === id)
-                const BlobList = cache.BlobList.slice(0, idx)
-                  .concat(cache.BlobList.slice(idx + 1))
-                proxy.writeQuery({
-                  query: gql.BlobListQuery,
-                  data: { BlobList },
-                })
-              },
-            })}
-            {...x}
+            data={x}
             id={id}
+            blobUpdate={updateBlob(id)}
+            blobDelete={deleteBlob(id)}
           />
         ))}
       </div>
