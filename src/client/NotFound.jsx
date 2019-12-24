@@ -1,7 +1,11 @@
 import React from 'react'
 
-const NotFound = ({ router: { location: { pathname } } }) => (
-  <p>{pathname} does not exist</p>
-)
-
-export default NotFound
+export default function NotFound({ router: { location: { pathname } } }) {
+  return (
+    <p>
+      {pathname}
+      {' '}
+      does not exist
+    </p>
+  )
+}

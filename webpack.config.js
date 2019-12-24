@@ -65,7 +65,7 @@ const plugins = [
       MOUNT: JSON.stringify(MOUNT),
     },
   }),
-  new MiniCssExtractPlugin()
+  new MiniCssExtractPlugin(),
 ]
 
 const stats = {

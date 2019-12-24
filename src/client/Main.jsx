@@ -1,24 +1,30 @@
 import * as React from 'react'
 import { Helmet } from 'react-helmet-async'
-import useJson from './useJson'
+import { useGraphql } from './useFetch'
+import Stringify from './Stringify'
 
-const Stringify = data => <pre>{JSON.stringify(data, null, 2)}</pre>
+const ErrorComponent = error => (
+  <>
+    <h1>oops!</h1>
+    <p>{error.message || Stringify(error)}</p>
+  </>
+)
 
-export default function Main(props) {
+export default function Main() {
   const [{
     error,
     loading,
-    data,
-  }, refetch] = useJson({ url: 'https://randomuser.me/api' })
-
-  if (error) {
-    return (
-      <>
-        <h1>oops!</h1>
-        <p>{error.message || Stringify(error)}</p>
-      </>
-    )
-  }
+    response,
+  }, refetch] = useGraphql('https://dfg.rocks/graphql', {
+    query: `query {
+      BlogList {
+        title
+        excerpt
+        category
+        tags
+      }
+    }`,
+  })
 
   return (
     <div>
@@ -26,14 +32,15 @@ export default function Main(props) {
         <title>Home</title>
       </Helmet>
       <div>
-        <button type="button" onClick={e => refetch()}>
+        <button type="button" onClick={() => refetch()}>
           Reload
         </button>
       </div>
-      {Stringify({
-        loading,
-        data,
-      })}
+      {loading
+        ? 'Loading'
+        : error
+          ? ErrorComponent(error)
+          : <Stringify {...{ ...response.body }} />}
     </div>
   )
 }

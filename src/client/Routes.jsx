@@ -1,6 +1,19 @@
 import React from 'react'
 import { Switch, Route } from 'react-router-dom'
-import routes from '../routes'
+import Main from './Main'
+import NotFound from './NotFound'
+
+export const routes = [
+  {
+    label: 'Home',
+    path: '/',
+    exact: true,
+    component: Main,
+  },
+  {
+    component: NotFound,
+  },
+]
 
 const Routes = props => (
   <Switch>
