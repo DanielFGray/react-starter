@@ -2,7 +2,7 @@ import gql from 'graphql-tag'
 
 export const BlobParts = gql`
   fragment BlobParts on Blob {
-    blob
+    body
     id
     title
     created_at
@@ -20,8 +20,8 @@ export const BlobListQuery = gql`
 `
 
 export const BlobCreateMutation = gql`
-  mutation ($blob: String!, $title: String!) {
-    BlobCreate(blob: $blob, title: $title) {
+  mutation ($body: String!, $title: String!) {
+    BlobCreate(body: $body, title: $title) {
       ...BlobParts
     }
   }
@@ -29,8 +29,8 @@ export const BlobCreateMutation = gql`
 `
 
 export const BlobUpdateMutation = gql`
-  mutation ($id: Int!, $blob: String!, $title: String!) {
-    BlobUpdate(id: $id, blob: $blob, title: $title) {
+  mutation ($id: Int!, $body: String!, $title: String!) {
+    BlobUpdate(id: $id, body: $body, title: $title) {
       ...BlobParts
     }
   }

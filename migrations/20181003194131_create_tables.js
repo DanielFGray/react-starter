@@ -4,7 +4,7 @@ exports.down = knex => knex.schema
 exports.up = knex => knex.schema
   .createTable('blobs', table => {
     table.increments('id').primary()
-    table.string('blob')
+    table.string('body')
     table.string('title')
     table.timestamps(true, true)
   })
@@ -21,5 +21,4 @@ exports.up = knex => knex.schema
     BEFORE UPDATE ON blobs
     FOR EACH ROW
     EXECUTE PROCEDURE update_modified_column();
-  `),
-)
+  `))

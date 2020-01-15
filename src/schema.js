@@ -14,7 +14,7 @@ export const typeDefs = gql`
   type Blob {
     id: Int!
     title: String
-    blob: String
+    body: String
     created_at: String!
     updated_at: String!
   }
@@ -24,8 +24,8 @@ export const typeDefs = gql`
   }
 
   type Mutation {
-    BlobCreate(blob: String, title: String): Blob
-    BlobUpdate(id: Int!, blob: String, title: String): Blob
+    BlobCreate(body: String, title: String): Blob
+    BlobUpdate(id: Int!, body: String, title: String): Blob
     BlobDelete(id: Int!): Int!
   }
 
@@ -41,14 +41,14 @@ export const resolvers = {
     BlobList: async () => db('blobs').select(),
   },
   Mutation: {
-    BlobCreate: async (_, { blob, title }) => {
-      const [data] = await db('blobs').insert({ blob, title }).returning('*')
+    BlobCreate: async (_, { body, title }) => {
+      const [data] = await db('blobs').insert({ body, title }).returning('*')
       pubsub.publish('BlobCreated', { BlobCreated: data })
       return data
     },
-    BlobUpdate: async (_, { id, blob, title }) => {
-      if (blob == null && title == null) throw new UserInputError('did not receive a blob or title to update')
-      const [data] = await db('blobs').where({ id }).update({ blob, title }).returning('*')
+    BlobUpdate: async (_, { id, body, title }) => {
+      if (body == null && title == null) throw new UserInputError('did not receive a body or title to update')
+      const [data] = await db('blobs').where({ id }).update({ body, title }).returning('*')
       if (! data) throw new UserInputError(`error updating ${id}, probably doesn't exist`)
       pubsub.publish('BlobUpdated', { BlobUpdated: data })
       return data
