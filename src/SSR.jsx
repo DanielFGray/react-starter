@@ -57,7 +57,6 @@ export default function SSR() {
         html,
         styles,
         scripts,
-        appBase,
       })
     } catch (e) {
       ctx.status = 500
