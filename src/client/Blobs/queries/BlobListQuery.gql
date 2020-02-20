@@ -1,0 +1,7 @@
+#import "./BlobParts.gql"
+query BlobList {
+  BlobList {
+    ...BlobParts
+  }
+}
+

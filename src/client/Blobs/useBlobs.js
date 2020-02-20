@@ -1,6 +1,12 @@
 import { useEffect } from 'react'
 import { useMutation, useQuery, useSubscription } from '@apollo/react-hooks'
-import * as gql from './queries'
+import BlobListQuery from './queries/BlobListQuery.gql'
+import BlobCreateMutation from './queries/BlobCreateMutation.gql'
+import BlobUpdateMutation from './queries/BlobUpdateMutation.gql'
+import BlobDeleteMutation from './queries/BlobDeleteMutation.gql'
+import BlobCreatedSubscription from './queries/BlobCreatedSubscription.gql'
+import BlobUpdatedSubscription from './queries/BlobUpdatedSubscription.gql'
+import BlobDeletedSubscription from './queries/BlobDeletedSubscription.gql'
 
 export default function useBlobs() {
   const {
@@ -8,16 +14,16 @@ export default function useBlobs() {
     refetch,
     error: errorQuery,
     subscribeToMore,
-  } = useQuery(gql.BlobListQuery)
-  const [CreateBlob, { error: errorCreate }] = useMutation(gql.BlobCreateMutation)
-  const [UpdateBlob, { error: errorUpdate }] = useMutation(gql.BlobUpdateMutation)
-  const [DeleteBlob, { error: errorDel }] = useMutation(gql.BlobDeleteMutation)
+  } = useQuery(BlobListQuery)
+  const [CreateBlob, { error: errorCreate }] = useMutation(BlobCreateMutation)
+  const [UpdateBlob, { error: errorUpdate }] = useMutation(BlobUpdateMutation)
+  const [DeleteBlob, { error: errorDel }] = useMutation(BlobDeleteMutation)
 
-  const { error: delSubErr } = useSubscription(gql.BlobDeletedSubscription, {
+  const { error: delSubErr } = useSubscription(BlobDeletedSubscription, {
     onSubscriptionData: ({ client, subscriptionData }) => {
       const deleted = subscriptionData.data?.BlobDeleted
       if (! deleted) return
-      const cache = client.readQuery({ query: gql.BlobListQuery })
+      const cache = client.readQuery({ query: BlobListQuery })
       const idx = cache.BlobList.findIndex(e => e.id === deleted)
       if (idx < 0) return
       const BlobList = [
@@ -25,17 +31,17 @@ export default function useBlobs() {
         ...cache.BlobList.slice(idx + 1),
       ]
       client.writeQuery({
-        query: gql.BlobListQuery,
+        query: BlobListQuery,
         data: { BlobList },
       })
     },
   })
 
-  const { error: updSubErr } = useSubscription(gql.BlobUpdatedSubscription, {
+  const { error: updSubErr } = useSubscription(BlobUpdatedSubscription, {
     onSubscriptionData: ({ client, subscriptionData }) => {
       const updated = subscriptionData.data?.BlobUpdated
       if (! updated) return
-      const cache = client.readQuery({ query: gql.BlobListQuery })
+      const cache = client.readQuery({ query: BlobListQuery })
       const idx = cache.BlobList.findIndex(e => e.id === updated.id)
       if (idx < 0) return
       const BlobList = [
@@ -44,7 +50,7 @@ export default function useBlobs() {
         ...cache.BlobList.slice(idx + 1),
       ]
       client.writeQuery({
-        query: gql.BlobListQuery,
+        query: BlobListQuery,
         data: { BlobList },
       })
     },
@@ -53,7 +59,7 @@ export default function useBlobs() {
   useEffect(() => {
     if (subscribeToMore) {
       subscribeToMore({
-        document: gql.BlobCreatedSubscription,
+        document: BlobCreatedSubscription,
         updateQuery: (prev, { subscriptionData }) => {
           const newBlob = subscriptionData.data.BlobCreated
           const exists = prev.BlobList.find(({ id }) => id === newBlob.id)
@@ -78,7 +84,7 @@ export default function useBlobs() {
 
   const reload = () => refetch()
 
-  const blobList = data?.BlobList
+  const listBlobs = data?.BlobList
     .slice(0)
     .sort((a, b) => b.updated_at - a.updated_at) ?? []
 
@@ -94,7 +100,7 @@ export default function useBlobs() {
       },
     },
     update: (proxy, result) => {
-      const cache = proxy.readQuery({ query: gql.BlobListQuery })
+      const cache = proxy.readQuery({ query: BlobListQuery })
       const idx = cache.BlobList.findIndex(e => e.id === id)
       if (idx < 0) return
       const BlobList = [
@@ -103,7 +109,7 @@ export default function useBlobs() {
         ...cache.BlobList.slice(idx + 1),
       ]
       proxy.writeQuery({
-        query: gql.BlobListQuery,
+        query: BlobListQuery,
         data: { BlobList },
       })
     },
@@ -112,7 +118,7 @@ export default function useBlobs() {
   const deleteBlob = id => () => DeleteBlob({
     variables: { id },
     update: proxy => {
-      const cache = proxy.readQuery({ query: gql.BlobListQuery })
+      const cache = proxy.readQuery({ query: BlobListQuery })
       const idx = cache.BlobList.findIndex(e => e.id === id)
       if (idx < 0) return
       const BlobList = [
@@ -120,7 +126,7 @@ export default function useBlobs() {
         ...cache.BlobList.slice(idx + 1),
       ]
       proxy.writeQuery({
-        query: gql.BlobListQuery,
+        query: BlobListQuery,
         data: { BlobList },
       })
     },
@@ -138,17 +144,20 @@ export default function useBlobs() {
       },
     },
     update: (proxy, result) => {
-      const cache = proxy.readQuery({ query: gql.BlobListQuery })
-      const BlobList = [result.data.BlobCreate, ...cache.BlobList]
+      const created = result.data.BlobCreate
+      const cache = proxy.readQuery({ query: BlobListQuery })
+      const exists = cache.BlobList.findIndex(e => e.id === created.id)
+      if (exists > -1) return
+      const BlobList = [created, ...cache.BlobList]
       proxy.writeQuery({
-        query: gql.BlobListQuery,
+        query: BlobListQuery,
         data: { BlobList },
       })
     },
   })
 
   return {
-    blobList,
+    listBlobs,
     createBlob,
     updateBlob,
     deleteBlob,

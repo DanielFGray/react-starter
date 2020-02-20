@@ -1,40 +1,9 @@
-import { PostgresPubSub } from 'graphql-postgres-subscriptions'
 import { makeExecutableSchema } from 'graphql-tools'
-import { UserInputError } from 'apollo-server-koa'
-import pg from 'pg'
-import gql from 'graphql-tag'
+import { UserInputError, PubSub } from 'apollo-server-koa'
 import db from './db'
+import typeDefs from './typeDefs.gql'
 
-const client = new pg.Client()
-client.connect()
-
-const pubsub = new PostgresPubSub({ client })
-
-export const typeDefs = gql`
-  type Blob {
-    id: Int!
-    title: String
-    body: String
-    created_at: String!
-    updated_at: String!
-  }
-
-  type Query {
-    BlobList: [Blob]
-  }
-
-  type Mutation {
-    BlobCreate(body: String, title: String): Blob
-    BlobUpdate(id: Int!, body: String, title: String): Blob
-    BlobDelete(id: Int!): Int!
-  }
-
-  type Subscription {
-    BlobCreated: Blob
-    BlobUpdated: Blob
-    BlobDeleted: Int!
-  }
-`
+const pubsub = new PubSub()
 
 export const resolvers = {
   Query: {
@@ -67,4 +36,4 @@ export const resolvers = {
   },
 }
 
-export default makeExecutableSchema({ typeDefs, resolvers })
+export const schema = makeExecutableSchema({ typeDefs, resolvers })

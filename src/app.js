@@ -1,12 +1,13 @@
+import Koa from 'koa'
 import koaHelmet from 'koa-helmet'
 import bodyParser from 'koa-body'
-import kcompose from 'koa-compose'
+import koaSession from 'koa-session'
 import { ApolloServer } from 'apollo-server-koa'
 import send from 'koa-send'
+import kcompose from 'koa-compose'
 import SSR from './SSR'
-import schema from './schema'
 
-const { PUBLIC_DIR } = process.env
+const { SESSION_SECRET, PUBLIC_DIR } = process.env
 
 async function log(ctx, next) {
   await next()
@@ -32,7 +33,8 @@ async function staticFiles(ctx, next) {
   return next()
 }
 
-export default function app() {
+export default async function main({ app, schema }) {
+  if (! (app instanceof Koa)) throw new Error('expected koa, received: ', app || 'undefined')
   const apolloServer = new ApolloServer({
     schema,
     subscriptions: {
@@ -43,13 +45,22 @@ export default function app() {
     },
   })
 
+  // eslint-disable-next-line no-param-reassign
+  app.keys = [SESSION_SECRET]
+  const sessionConf = {
+    key: 'nodeapp_session',
+    rolling: true,
+    renew: true,
+  }
+
   return kcompose([
     koaHelmet(),
     bodyParser(),
     log,
     time,
+    koaSession(sessionConf, app),
     staticFiles,
     apolloServer.getMiddleware(),
-    SSR,
+    SSR({ schema }),
   ])
 }

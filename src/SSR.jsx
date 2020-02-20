@@ -8,7 +8,6 @@ import { SchemaLink } from 'apollo-link-schema'
 import { InMemoryCache } from 'apollo-cache-inmemory'
 import Layout from './client/Layout'
 import * as Html from './Html'
-import schema from './schema'
 
 const { NODE_ENV, APP_BASE } = process.env
 
@@ -28,48 +27,50 @@ const getAssets = ctx => {
   }, { styles: [], scripts: [] })
 }
 
-export default async function SSR(ctx) {
-  const { styles, scripts } = getAssets(ctx)
-  const client = new ApolloClient({
-    ssrMode: true,
-    cache: new InMemoryCache(),
-    link: new SchemaLink({ schema }),
-  })
-  const routerCtx = {}
-  const helmetCtx = {}
+export default function SSR({ schema }) {
+  return async ctx => {
+    const { styles, scripts } = getAssets(ctx)
+    const client = new ApolloClient({
+      ssrMode: true,
+      cache: new InMemoryCache(),
+      link: new SchemaLink({ schema }),
+    })
+    const routerCtx = {}
+    const helmetCtx = {}
 
-  const App = (
-    <ApolloProvider client={client}>
-      <StaticRouter
-        basename={APP_BASE}
-        location={ctx.url}
-        context={routerCtx}
-      >
-        <HelmetProvider context={helmetCtx}>
-          <Layout />
-        </HelmetProvider>
-      </StaticRouter>
-    </ApolloProvider>
-  )
+    const App = (
+      <ApolloProvider client={client}>
+        <StaticRouter
+          basename={APP_BASE}
+          location={ctx.url}
+          context={routerCtx}
+        >
+          <HelmetProvider context={helmetCtx}>
+            <Layout />
+          </HelmetProvider>
+        </StaticRouter>
+      </ApolloProvider>
+    )
 
-  const html = await renderToStringWithData(App)
-  const { helmet } = helmetCtx
-  const data = { __INIT_DATA: client.extract() }
+    const html = await renderToStringWithData(App)
+    const { helmet } = helmetCtx
+    const data = { __INIT_DATA: client.extract() }
 
-  if (routerCtx.statusCode) {
-    ctx.status = routerCtx.statusCode
+    if (routerCtx.statusCode) {
+      ctx.status = routerCtx.statusCode
+    }
+    if (routerCtx.url) {
+      ctx.redirect(routerCtx.url)
+      return
+    }
+    ctx.body = Html.toString({
+      data,
+      helmet,
+      html,
+      styles,
+      scripts,
+    })
   }
-  if (routerCtx.url) {
-    ctx.redirect(routerCtx.url)
-    return
-  }
-  ctx.body = Html.toString({
-    data,
-    helmet,
-    html,
-    styles,
-    scripts,
-  })
 }
 
 if (module.hot) {

@@ -46,10 +46,7 @@ export function Component({
           <script
             type="text/javascript"
             dangerouslySetInnerHTML={{
-              __html: Object.entries(data)
-                .reduce((p, [k, v]) => p.concat(`window[${JSON.stringify(k)}]=${
-                  JSON.stringify(v, null, NODE_ENV === 'development' ? 2 : undefined)
-                };`), ''),
+              __html: Object.entries(data).reduce((p, [k, v]) => p.concat(`window[${k}]=${JSON.stringify(v, null, NODE_ENV === 'development' ? 2 : undefined)};`), ''),
             }}
           />
         )}

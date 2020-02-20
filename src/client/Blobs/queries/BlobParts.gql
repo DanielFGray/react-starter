@@ -1,0 +1,7 @@
+fragment BlobParts on Blob {
+  body
+  id
+  title
+  created_at
+  updated_at
+}

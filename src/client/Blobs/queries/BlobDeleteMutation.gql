@@ -1,0 +1,3 @@
+mutation BlobDelete ($id: Int!) {
+  BlobDelete(id: $id)
+}

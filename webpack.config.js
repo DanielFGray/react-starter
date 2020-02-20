@@ -109,7 +109,7 @@ const clientConfig = {
 const serverConfig = {
   name: 'server',
   mode: NODE_ENV,
-  entry: { index: './src/index' },
+  entry: { index: devMode ? './src/SSR' : './src/index' },
   target: 'node',
   externals: [
     /config\.js$/,

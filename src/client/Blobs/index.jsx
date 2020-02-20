@@ -6,7 +6,7 @@ import useBlobs from './useBlobs'
 
 export default function Blob() {
   const {
-    blobList,
+    listBlobs,
     createBlob,
     updateBlob,
     deleteBlob,
@@ -30,7 +30,7 @@ export default function Blob() {
       <Form refetch={reload} submit={createBlob} />
       {errors.length > 0 && 'there were errors :('}
       <div className="blobList">
-        {blobList.map(({ id, ...x }) => (
+        {listBlobs.map(({ id, ...x }) => (
           <Item
             key={id}
             data={x}

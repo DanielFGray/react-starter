@@ -1,0 +1,6 @@
+#import "./BlobParts.gql"
+mutation BlobUpdate ($id: Int!, $body: String!, $title: String!) {
+  BlobUpdate (id: $id, body: $body, title: $title) {
+    ...BlobParts
+  }
+}

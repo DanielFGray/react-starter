@@ -1,0 +1,6 @@
+#import "./BlobParts.gql"
+mutation BlobCreate ($body: String!, $title: String!) {
+  BlobCreate (body: $body, title: $title) {
+    ...BlobParts
+  }
+}

@@ -1,0 +1,6 @@
+#import "./BlobParts.gql"
+subscription BlobCreated {
+  BlobCreated {
+    ...BlobParts
+  }
+}
