@@ -3,7 +3,8 @@ import { promises as fs } from 'fs'
 import Koa from 'koa'
 import app from './app'
 
-const { NODE_ENV, PORT, HOST } = process.env
+const { NODE_ENV } = process.env
+const { PORT, HOST } = process.env
 
 function die(e) {
   console.error(e)
@@ -15,8 +16,8 @@ process.on('SIGINT', () => die('interrupted!'))
 process.on('uncaughtException', die)
 
 async function startServer(cb) {
-  const { HTTPS_CERT, HTTPS_KEY } = process.env
   let server
+  const { HTTPS_CERT, HTTPS_KEY } = process.env
   if (HTTPS_CERT && HTTPS_KEY) {
     const [http2, cert, key] = await Promise.all([
       import('http2'),
@@ -33,28 +34,22 @@ async function startServer(cb) {
   return server
 }
 
-(async function main() {
+async function main() {
   const koa = new Koa()
 
-  let pre // FIXME this is all terrible
-  let post
-  if (NODE_ENV !== 'development') {
+  if (NODE_ENV === 'development') {
+    await (await import('./dev')).dev(koa)
+  } else {
     const manifest = JSON.parse(await fs.readFile('./dist/manifest.json', 'utf8'))
-    pre = async (ctx, next) => {
+    koa.use(async (ctx, next) => {
       ctx.state.manifest = manifest
       await next()
-    }
-  } else {
-    const { dev } = await import('./dev')
-    const { hotServerMiddleware, koaWebpack } = await dev()
-    pre = koaWebpack
-    post = hotServerMiddleware
+    })
   }
 
-  if (pre) koa.use(pre)
-  koa.use(app())
-  if (post) koa.use(post)
+  koa.use(app)
 
-  const server = await startServer(koa.callback())
+  await startServer(koa.callback())
   console.info(`server now running on http://${HOST}:${PORT}`)
-}())
+}
+main()

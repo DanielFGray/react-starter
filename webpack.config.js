@@ -6,7 +6,6 @@ const { DefinePlugin } = require('webpack')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const nodeExternals = require('webpack-node-externals')
 
 const {
@@ -133,9 +132,7 @@ const serverConfig = {
 
 if (! devMode) {
   clientConfig.plugins.push(
-    // new BabelMinifyWebpackPlugin(),
     new CleanWebpackPlugin({ default: ['dist', 'public'] }),
-    new OptimizeCssAssetsPlugin(),
   )
 }
 

@@ -5,11 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 const { APP_BASE } = process.env
 
 export function Component({
-  data,
-  html,
-  helmet,
-  styles,
-  scripts,
+  data, html, helmet, styles, scripts,
 }) {
   return (
     <html lang="en" {...helmet.htmlAttributes.toString()}>
@@ -26,14 +22,10 @@ export function Component({
           name="viewport"
           content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
         />
-        {styles && styles.map(link => (
-          <link
-            key={link}
-            rel="stylesheet"
-            type="text/css"
-            href={`${APP_BASE}/${link}`}
-          />
-        ))}
+        {styles
+          && styles.map(link => (
+            <link key={link} rel="stylesheet" type="text/css" href={`${APP_BASE}/${link}`} />
+          ))}
       </head>
       <body {...helmet.bodyAttributes.toComponent()}>
         <div
@@ -43,25 +35,13 @@ export function Component({
           }}
         />
         {data && (
-          <script
-            type="text/javascript"
-            dangerouslySetInnerHTML={{
-              __html: Object.entries(data)
-                .reduce((p, [k, v]) => p.concat(`window[${JSON.stringify(k)}]=${
-                  JSON.stringify(v, null, process.env.NODE_ENV === 'development' ? 2 : undefined)
-                };`), ''),
-            }}
-          />
+          <script type="application/json">
+            {JSON.stringify(data, null, process.env.NODE_ENV === 'development' ? 2 : undefined)}
+          </script>
         )}
         {helmet.script.toComponent()}
-        {scripts && scripts.map(js => (
-          <script
-            key={js}
-            defer
-            type="text/javascript"
-            src={`${APP_BASE}/${js}`}
-          />
-        ))}
+        {scripts
+          && scripts.map(js => <script key={js} type="text/javascript" src={`${APP_BASE}/${js}`} />)}
       </body>
     </html>
   )

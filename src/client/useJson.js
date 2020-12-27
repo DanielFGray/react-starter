@@ -1,6 +1,6 @@
 import { useReducer, useEffect } from 'react'
 
-const reducer = (state, action) => {
+const reducer = (state = {}, action) => {
   switch (action.type) {
   case 'WAIT':
     return { ...state, loading: true }
@@ -17,9 +17,9 @@ const reducer = (state, action) => {
   }
 }
 
-export default function useJson(url, { autoFetch = true, ...props } = {}) {
+export default function useJson(url, { autoFetch = true, initData = null, ...props } = {}) {
   const [state, dispatch] = useReducer(reducer, {
-    data: null,
+    data: initData,
     error: null,
     loading: autoFetch,
   })

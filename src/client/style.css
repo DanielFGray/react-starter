@@ -1,6 +1,5 @@
 :root {
   --hue: 220;
-  --hue: 220;
   --primary-color: hsl(var(--hue), 50%, 50%);
   --color-bg: #eee;
   --color-bg-alt: #ccc;

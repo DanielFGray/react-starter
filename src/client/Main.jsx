@@ -1,27 +1,23 @@
 import * as React from 'react'
 import { Helmet } from 'react-helmet-async'
+import Layout from './components/DefaultLayout'
 import useJson from './useJson'
+import Stringify from './components/Stringify'
 
-const Stringify = data => <pre>{JSON.stringify(data, null, 2)}</pre>
-
-export default function Main(props) {
-  const [{
-    error,
-    loading,
-    data,
-  }, refetch] = useJson('/api/v1/test')
+export default function Main({ initData }) {
+  const [{ error, loading, data }, refetch] = useJson('/api/v1/test', { initData })
 
   if (error) {
     return (
       <>
         <h1>oops!</h1>
-        <p>{error.message || Stringify(error)}</p>
+        <p>{Stringify({ error, message: error.message })}</p>
       </>
     )
   }
 
   return (
-    <div>
+    <Layout>
       <Helmet>
         <title>Home</title>
       </Helmet>
@@ -30,10 +26,7 @@ export default function Main(props) {
           Reload
         </button>
       </div>
-      {Stringify({
-        loading,
-        data: data || props.initData,
-      })}
-    </div>
+      {Stringify({ loading, data })}
+    </Layout>
   )
 }

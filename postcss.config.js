@@ -1,16 +1,8 @@
-/* eslint-disable import/no-extraneous-dependencies,global-require */
-module.exports = {
-  plugins: [
-    require('postcss-preset-env')({ stage: 1 }),
-    require('postcss-fixes')({ preset: 'recommended' }),
-  ],
-  env: {
-    production: {
-      cssnano: {
-        autoprefixer: false,
-        safe: true,
-        calc: false,
-      },
-    },
+module.exports = ({ env }) => ({
+  plugins: {
+    'postcss-preset-env': { stage: 0 },
+    'postcss-advanced-variables': {},
+    'postcss-extend-rule': { onUnusedExtend: 'warn' },
+    cssnano: env === 'production' ? { autoprefixer: false, safe: true, calc: false } : false,
   },
-}
+})
